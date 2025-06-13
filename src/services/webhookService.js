@@ -26,8 +26,9 @@ export const getWebhookConfigs = async (options = {}) => {
       .select('*', { count: 'exact' });
 
     // Aplicar filtro por tipo de evento se especificado
+    // Usar contains para consultar o array de eventos
     if (eventType) {
-      query = query.eq('event_type', eventType);
+      query = query.contains('events', [eventType]);
     }
 
     // Aplicar paginação
@@ -222,7 +223,7 @@ export const testWebhook = async (id) => {
       .from('webhook_logs')
       .insert([{
         config_id: id,
-        event_type: config.event_type || 'test',
+        event_type: config.events && config.events.length > 0 ? config.events[0] : 'test',
         request_url: config.url,
         request_method: config.method || 'POST',
         request_headers: config.headers || {},
@@ -252,22 +253,15 @@ export const testWebhook = async (id) => {
 export const formatWebhookConfigFromBackend = (config) => {
   if (!config) return null;
 
-  // Converter event_type (string) para events (array)
-  // No backend temos event_type, no frontend usamos events como array
-  let events = [];
-  if (config.event_type) {
-    events = [config.event_type];
-  }
-
   return {
     id: config.id,
     name: config.name || '',
     description: config.description || '',
     url: config.url || '',
     method: config.method || 'POST',
-    events: events,
+    events: config.events || [], // Manter como array do banco de dados
     headers: config.headers || {},
-    active: config.active !== false, // Default para true se não especificado
+    is_active: config.is_active !== false, // Usar is_active do banco
     retryCount: config.retry_count || 0,
     createdAt: config.created_at || new Date().toISOString(),
     updatedAt: config.updated_at || new Date().toISOString()
@@ -280,21 +274,14 @@ export const formatWebhookConfigFromBackend = (config) => {
 export const formatWebhookConfigToBackend = (config) => {
   if (!config) return null;
 
-  // Converter events (array) para event_type (string)
-  // No frontend usamos events como array, no backend temos event_type
-  let eventType = null;
-  if (config.events && config.events.length > 0) {
-    eventType = config.events[0]; // Pegar o primeiro evento como tipo principal
-  }
-
   return {
     name: config.name || '',
     description: config.description || '',
     url: config.url || '',
     method: config.method || 'POST',
-    event_type: eventType,
+    events: config.events || [], // Manter como array para o banco
     headers: config.headers || {},
-    active: config.active !== false, // Default para true se não especificado
+    is_active: config.is_active !== false, // Usar is_active para o banco
     retry_count: config.retryCount || 0
   };
 };
