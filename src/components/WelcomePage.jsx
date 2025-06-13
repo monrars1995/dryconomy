@@ -16,7 +16,8 @@ import {
   EmojiNature as EcoIcon,
   AttachMoney as MoneyIcon,
   CheckCircle as CheckCircleIcon,
-  ArrowForward as ArrowForwardIcon
+  ArrowForward as ArrowForwardIcon,
+  Opacity as OpacityIcon
 } from '@mui/icons-material';
 
 // Importar o componente WaterDropSVG do arquivo WaterSavingsResults
@@ -92,7 +93,7 @@ const WelcomePage = ({ onStartSimulation, darkMode }) => {
   
   const features = [
     {
-      icon: WaterDropSVG,
+      icon: OpacityIcon,
       title: 'Economia de Água',
       description: 'Reduza em até 60% o consumo de água na sua indústria com nossa tecnologia inovadora.'
     },

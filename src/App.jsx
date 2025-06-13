@@ -29,7 +29,7 @@ import ImprovedStepper from './components/ImprovedStepper';
 import ResponsiveNavigation from './components/ResponsiveNavigation';
 
 // Serviços
-import { getCities, saveSimulation } from './services/simulationService';
+import { getCalculationVariables, getCities, saveSimulation } from './services/simulationService';
 
 // Componente principal do Simulador
 const App = () => {
@@ -39,6 +39,7 @@ const App = () => {
   const [activeStep, setActiveStep] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [cities, setCities] = useState([]);
+  const [calculationVars, setCalculationVars] = useState({});
   const [darkMode, setDarkMode] = useState(() => {
     // Verificar preferência salva ou preferência do sistema
     const saved = localStorage.getItem('darkMode');
@@ -50,6 +51,7 @@ const App = () => {
   const [completedSteps, setCompletedSteps] = useState([]);
   const [simulationCompleted, setSimulationCompleted] = useState(false);
   const [budgetRequestData, setBudgetRequestData] = useState(null);
+  const [initialDataLoaded, setInitialDataLoaded] = useState(false);
   
   // Estados para notificações
   const [notification, setNotification] = useState({
@@ -132,24 +134,26 @@ const App = () => {
         main: '#dc004e',
       },
       background: {
-        default: darkMode ? '#121212' : '#fafafa',
+        default: darkMode ? '#121212' : '#fafafa', // Fundo mais suave no light
         paper: darkMode ? '#1e1e1e' : '#ffffff'
       },
       text: {
-        primary: darkMode ? '#ffffff' : '#1a1a1a',
-        secondary: darkMode ? 'rgba(255,255,255,0.7)' : '#4a4a4a',
+        primary: darkMode ? '#ffffff' : '#1a1a1a', // Texto mais escuro no light
+        secondary: darkMode ? 'rgba(255,255,255,0.7)' : '#4a4a4a', // Texto secundário mais legível
       },
       success: {
         main: '#2e7d32',
         light: '#4caf50',
         dark: '#1b5e20'
       },
+      // Melhorar contraste para elementos de ação
       action: {
         hover: darkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
         selected: darkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)',
         disabled: darkMode ? 'rgba(255, 255, 255, 0.26)' : 'rgba(0, 0, 0, 0.26)',
         disabledBackground: darkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.12)',
       },
+      // Melhorar divisores
       divider: darkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)',
     },
     typography: {
@@ -216,6 +220,7 @@ const App = () => {
         styleOverrides: {
           root: {
             borderRadius: 12,
+            // Melhor sombra para modo light
             boxShadow: darkMode 
               ? '0 8px 32px rgba(0,0,0,0.3)' 
               : '0 2px 12px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)',
@@ -225,6 +230,7 @@ const App = () => {
       MuiCard: {
         styleOverrides: {
           root: {
+            // Melhor contraste para cards no modo light
             backgroundColor: darkMode ? '#1e1e1e' : '#ffffff',
             border: darkMode ? 'none' : '1px solid rgba(0,0,0,0.06)',
             boxShadow: darkMode 
@@ -260,6 +266,45 @@ const App = () => {
             }
           }
         }
+      },
+      MuiChip: {
+        styleOverrides: {
+          root: {
+            backgroundColor: darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)',
+            color: darkMode ? '#ffffff' : '#2c2c2c',
+            '&.MuiChip-colorPrimary': {
+              backgroundColor: darkMode ? 'rgba(25,118,210,0.3)' : 'rgba(0,51,122,0.1)',
+              color: darkMode ? '#90caf9' : '#00337A',
+            }
+          }
+        }
+      },
+      MuiAlert: {
+        styleOverrides: {
+          root: {
+            borderRadius: 8,
+          },
+          standardSuccess: {
+            backgroundColor: darkMode ? 'rgba(46,125,50,0.2)' : 'rgba(46,125,50,0.08)',
+            color: darkMode ? '#81c784' : '#2e7d32',
+            border: darkMode ? '1px solid rgba(46,125,50,0.3)' : '1px solid rgba(46,125,50,0.2)',
+          },
+          standardInfo: {
+            backgroundColor: darkMode ? 'rgba(25,118,210,0.2)' : 'rgba(25,118,210,0.08)',
+            color: darkMode ? '#90caf9' : '#1976d2',
+            border: darkMode ? '1px solid rgba(25,118,210,0.3)' : '1px solid rgba(25,118,210,0.2)',
+          },
+          standardWarning: {
+            backgroundColor: darkMode ? 'rgba(237,108,2,0.2)' : 'rgba(237,108,2,0.08)',
+            color: darkMode ? '#ffb74d' : '#ed6c02',
+            border: darkMode ? '1px solid rgba(237,108,2,0.3)' : '1px solid rgba(237,108,2,0.2)',
+          },
+          standardError: {
+            backgroundColor: darkMode ? 'rgba(211,47,47,0.2)' : 'rgba(211,47,47,0.08)',
+            color: darkMode ? '#f48fb1' : '#d32f2f',
+            border: darkMode ? '1px solid rgba(211,47,47,0.3)' : '1px solid rgba(211,47,47,0.2)',
+          }
+        }
       }
     },
     shape: {
@@ -289,51 +334,73 @@ const App = () => {
 
   // Carregar dados iniciais apenas uma vez
   useEffect(() => {
-    let isMounted = true;
-    
     const loadInitialData = async () => {
+      if (initialDataLoaded) return; // Evitar carregamento múltiplo
+      
       try {
         setIsLoading(true);
         
         // Carregar cidades
-        const citiesData = await getCities();
+        try {
+          const citiesData = await getCities();
+          setCities(citiesData || []);
+        } catch (error) {
+          console.warn('Erro ao carregar cidades:', error);
+          setCities([]);
+        }
         
-        if (isMounted) {
-          setCities(citiesData);
-          setCitiesData(citiesData);
+        // Carregar variáveis de cálculo
+        try {
+          const vars = await getCalculationVariables();
+          setCalculationVars(vars || {});
+        } catch (error) {
+          console.warn('Erro ao carregar variáveis de cálculo:', error);
+          setCalculationVars({});
+        }
+        
+        setInitialDataLoaded(true);
+        
+      } catch (error) {
+        console.error('Erro ao carregar dados iniciais:', error);
+        setNotification({
+          open: true,
+          message: 'Erro ao carregar dados iniciais. Usando valores padrão.',
+          severity: 'warning'
+        });
+        setInitialDataLoaded(true); // Marcar como carregado mesmo com erro
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadInitialData();
+  }, [initialDataLoaded]);
+
+  useEffect(() => {
+    const loadCities = async () => {
+      if (!initialDataLoaded || citiesData.length > 0) return;
+      
+      try {
+        const cities = await getCities();
+        if (cities?.length > 0) {
+          setCitiesData(cities);
+          console.log('Cidades carregadas:', cities.length);
           
-          // Se há uma localização selecionada, encontrar a cidade correspondente
-          if (inputs.location && citiesData?.length > 0) {
-            const city = citiesData.find(c => 
+          if (inputs.location) {
+            const city = cities.find(c => 
               c.name === inputs.location || 
               c.name.toLowerCase() === inputs.location.toLowerCase()
             );
             if (city) setSelectedCity(city);
           }
         }
-        
       } catch (error) {
-        console.error('Erro ao carregar dados iniciais:', error);
-        if (isMounted) {
-          setNotification({
-            open: true,
-            message: 'Erro ao carregar dados iniciais. Usando valores padrão.',
-            severity: 'warning'
-          });
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
+        console.error('Erro ao carregar cidades:', error);
       }
     };
     
-    loadInitialData();
-    
-    return () => {
-      isMounted = false;
-    };
-  }, []); // Dependências vazias para executar apenas uma vez
+    loadCities();
+  }, [inputs.location, initialDataLoaded, citiesData.length]);
 
   // Função para calcular resultados baseado nos inputs
   const calculateResults = () => {
@@ -466,8 +533,10 @@ const App = () => {
     }));
   };
 
+  // CORRIGIDO: Remover auto-avanço da função handleUserDataChange
   const handleUserDataChange = (newUserData) => {
     setUserData(newUserData);
+    // Não fazer auto-avanço aqui - deixar o usuário clicar em "Próximo"
   };
 
   const handleParametersChange = (newParams) => {
@@ -612,17 +681,10 @@ const App = () => {
             alignItems: 'center',
             py: 4,
             px: { xs: 2, sm: 3, md: 4 },
-            pb: { xs: 10, sm: 4 }
+            pb: { xs: 10, sm: 4 } // Espaço extra no mobile para navegação fixa
           }}
         >
-          {/* Loading overlay apenas quando necessário */}
-          {isLoading && (
-            <LoadingSpinner 
-              fullScreen 
-              overlay 
-              message="Carregando dados..." 
-            />
-          )}
+          {isLoading && <LoadingSpinner fullScreen overlay message="Carregando dados..." />}
           
           <Paper
             elevation={darkMode ? 24 : 3}
@@ -718,8 +780,8 @@ const App = () => {
                   {activeStep < 5 && (
                     <ProgressIndicator
                       currentStep={activeStep}
-                      totalSteps={steps.length - 1}
-                      stepLabels={steps.slice(0, -1).map(s => s.label)}
+                      totalSteps={steps.length - 1} // Excluir página de obrigado do progresso
+                      stepLabels={steps.slice(0, -1).map(s => s.label)} // Excluir página de obrigado
                     />
                   )}
 
@@ -727,7 +789,7 @@ const App = () => {
                   {activeStep < 5 && (
                     <ImprovedStepper
                       activeStep={activeStep}
-                      steps={steps.slice(0, -1)}
+                      steps={steps.slice(0, -1)} // Excluir página de obrigado
                       completedSteps={completedSteps}
                       orientation={isXs ? 'vertical' : 'horizontal'}
                     />
@@ -742,7 +804,7 @@ const App = () => {
                   {activeStep < 5 && (
                     <ResponsiveNavigation
                       activeStep={activeStep}
-                      totalSteps={steps.length - 1}
+                      totalSteps={steps.length - 1} // Excluir página de obrigado
                       onBack={handleBack}
                       onNext={handleNext}
                       onFinish={handleFinishSimulation}
