@@ -3,7 +3,7 @@ import { Box, Typography, Grid, Card, CardContent, useTheme, useMediaQuery } fro
 import { Opacity } from '@mui/icons-material';
 
 // Componentes SVG personalizados
-const WaterDropSVG = ({ sx = {} }) => {
+export const WaterDropSVG = ({ sx = {} }) => {
   // Extrair valores primitivos do objeto sx
   const width = sx.fontSize || 48;
   const height = sx.fontSize || 48;
