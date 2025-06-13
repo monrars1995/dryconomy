@@ -182,7 +182,7 @@ const App = () => {
   const isSm = useMediaQuery('(max-width:960px)');
   const isMd = useMediaQuery('(max-width:1280px)');
 
-  // Constantes melhoradas
+  // Constantes melhoradas - CORRIGIDO: 5 etapas
   const steps = [
     { label: 'Início', description: 'Bem-vindo ao simulador' },
     { label: 'Dados Pessoais', description: 'Suas informações de contato' },
