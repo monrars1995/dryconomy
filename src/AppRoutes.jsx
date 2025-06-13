@@ -25,7 +25,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#1976d2',
+      main: '#00337A',
     },
     secondary: {
       main: '#dc004e',
@@ -35,7 +35,7 @@ const theme = createTheme({
     },
   },
   typography: {
-    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+    fontFamily: '"Poppins", "Roboto", "Helvetica", "Arial", sans-serif',
     h1: {
       fontWeight: 500,
     },
@@ -81,12 +81,12 @@ const AppRoutes = () => {
             {/* Rotas Protegidas - Admin */}
             <Route element={<ProtectedRoute />}>
               <Route element={<AdminLayout />}>
-                <Route path="/admin" element={<Navigate to="/admin/variaveis" replace />} />
+                <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+                <Route path="/admin/dashboard" element={<DashboardPage />} />
                 <Route path="/admin/variaveis" element={<CalculationVariables />} />
                 <Route path="/admin/cidades" element={<Cities />} />
                 <Route path="/admin/leads" element={<Leads />} />
                 <Route path="/admin/webhooks" element={<Webhooks />} />
-                <Route path="/admin/dashboard" element={<DashboardPage />} />
               </Route>
             </Route>
             
