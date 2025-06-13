@@ -176,7 +176,16 @@ const CityForm = ({ open, city, onClose, onSave }) => {
         ...formData,
         water_consumption_year: formData.water_consumption_year ? Number(formData.water_consumption_year) : null,
         water_consumption_year_conventional: formData.water_consumption_year_conventional ? Number(formData.water_consumption_year_conventional) : null,
-        average_temperature: formData.average_temperature ? Number(formData.average_temperature) : null
+        average_temperature: formData.average_temperature ? Number(formData.average_temperature) : null,
+        capacity: formData.capacity ? Number(formData.capacity) : null,
+        tin: formData.tin ? Number(formData.tin) : null,
+        tout: formData.tout ? Number(formData.tout) : null,
+        water_flow: formData.water_flow ? Number(formData.water_flow) : null,
+        water_consumption_year_temp: formData.water_consumption_year_temp ? Number(formData.water_consumption_year_temp) : null,
+        makeup_water_temp: formData.makeup_water_temp ? Number(formData.makeup_water_temp) : null,
+        water_consumption_year_fan: formData.water_consumption_year_fan ? Number(formData.water_consumption_year_fan) : null,
+        makeup_water_fan_logic: formData.makeup_water_fan_logic ? Number(formData.makeup_water_fan_logic) : null,
+        water_consumption_fan_logic: formData.water_consumption_fan_logic ? Number(formData.water_consumption_fan_logic) : null
       };
       
       let response;
@@ -210,7 +219,7 @@ const CityForm = ({ open, city, onClose, onSave }) => {
       maxWidth="md"
       PaperProps={{
         sx: {
-          borderRadius: 2,
+          borderRadius: 3,
           boxShadow: theme.shadows[10]
         }
       }}
@@ -262,6 +271,7 @@ const CityForm = ({ open, city, onClose, onSave }) => {
               error={!!validationErrors.name}
               helperText={validationErrors.name}
               required
+              sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
             />
           </Grid>
           
@@ -275,6 +285,7 @@ const CityForm = ({ open, city, onClose, onSave }) => {
               variant="outlined"
               disabled={loading}
               placeholder="Ex: SP, RJ, MG"
+              sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
             />
           </Grid>
           
@@ -288,6 +299,7 @@ const CityForm = ({ open, city, onClose, onSave }) => {
               variant="outlined"
               disabled={loading}
               placeholder="Ex: Brasil"
+              sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
             />
           </Grid>
           
@@ -303,6 +315,7 @@ const CityForm = ({ open, city, onClose, onSave }) => {
               error={!!validationErrors.average_temperature}
               helperText={validationErrors.average_temperature}
               placeholder="Ex: 25"
+              sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
             />
           </Grid>
           
@@ -326,6 +339,7 @@ const CityForm = ({ open, city, onClose, onSave }) => {
               error={!!validationErrors.water_consumption_year}
               helperText={validationErrors.water_consumption_year}
               placeholder="Ex: 1000000"
+              sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
             />
           </Grid>
           
@@ -341,6 +355,7 @@ const CityForm = ({ open, city, onClose, onSave }) => {
               error={!!validationErrors.water_consumption_year_conventional}
               helperText={validationErrors.water_consumption_year_conventional}
               placeholder="Ex: 2500000"
+              sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
             />
           </Grid>
           
@@ -364,6 +379,7 @@ const CityForm = ({ open, city, onClose, onSave }) => {
               error={!!validationErrors.capacity}
               helperText={validationErrors.capacity}
               placeholder="Ex: 150.5"
+              sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
             />
           </Grid>
           
@@ -379,6 +395,7 @@ const CityForm = ({ open, city, onClose, onSave }) => {
               error={!!validationErrors.water_flow}
               helperText={validationErrors.water_flow}
               placeholder="Ex: 22.5"
+              sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
             />
           </Grid>
           
@@ -394,6 +411,7 @@ const CityForm = ({ open, city, onClose, onSave }) => {
               error={!!validationErrors.tin}
               helperText={validationErrors.tin}
               placeholder="Ex: 41"
+              sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
             />
           </Grid>
           
@@ -409,6 +427,7 @@ const CityForm = ({ open, city, onClose, onSave }) => {
               error={!!validationErrors.tout}
               helperText={validationErrors.tout}
               placeholder="Ex: 35"
+              sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
             />
           </Grid>
           
@@ -432,6 +451,7 @@ const CityForm = ({ open, city, onClose, onSave }) => {
               error={!!validationErrors.water_consumption_year_temp}
               helperText={validationErrors.water_consumption_year_temp}
               placeholder="Ex: 200"
+              sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
             />
           </Grid>
           
@@ -447,6 +467,7 @@ const CityForm = ({ open, city, onClose, onSave }) => {
               error={!!validationErrors.makeup_water_temp}
               helperText={validationErrors.makeup_water_temp}
               placeholder="Ex: 0.15"
+              sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
             />
           </Grid>
           
@@ -462,6 +483,7 @@ const CityForm = ({ open, city, onClose, onSave }) => {
               error={!!validationErrors.water_consumption_year_fan}
               helperText={validationErrors.water_consumption_year_fan}
               placeholder="Ex: 400"
+              sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
             />
           </Grid>
           
@@ -477,6 +499,7 @@ const CityForm = ({ open, city, onClose, onSave }) => {
               error={!!validationErrors.makeup_water_fan_logic}
               helperText={validationErrors.makeup_water_fan_logic}
               placeholder="Ex: 0.25"
+              sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
             />
           </Grid>
           
@@ -492,6 +515,7 @@ const CityForm = ({ open, city, onClose, onSave }) => {
               error={!!validationErrors.water_consumption_fan_logic}
               helperText={validationErrors.water_consumption_fan_logic}
               placeholder="Ex: 1.90"
+              sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
             />
           </Grid>
         </Grid>

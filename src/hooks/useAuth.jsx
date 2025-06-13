@@ -29,7 +29,8 @@ export function AuthProvider({ children }) {
           // Definir o usuário com a role
           const userWithRole = {
             ...session.user,
-            role: profile?.role || 'user'
+            role: profile?.role || 'user',
+            fullName: profile?.full_name || 'Usuário'
           };
           
           setUser(userWithRole);
@@ -39,6 +40,7 @@ export function AuthProvider({ children }) {
         } else {
           // Se não tiver sessão ativa, limpar o usuário
           setUser(null);
+          localStorage.removeItem('userData');
         }
       } catch (error) {
         console.error('Erro ao verificar sessão:', error);
@@ -51,7 +53,7 @@ export function AuthProvider({ children }) {
     getInitialSession();
 
     // Listen for changes in auth state
-    const { data, subscription } = supabase.auth.onAuthStateChange(
+    const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('Auth state change:', event, !!session);
         
@@ -77,7 +79,8 @@ export function AuthProvider({ children }) {
           // Definir o usuário com a role
           const userWithRole = {
             ...session.user,
-            role: profile?.role || 'user'
+            role: profile?.role || 'user',
+            fullName: profile?.full_name || 'Usuário'
           };
           
           setUser(userWithRole);
@@ -89,51 +92,14 @@ export function AuthProvider({ children }) {
     );
 
     return () => {
-      subscription?.unsubscribe();
+      authListener?.subscription?.unsubscribe();
     };
   }, []);
-
-  // Sign up a new user
-  const signUp = async (email, password, userData) => {
-    try {
-      const { user: signedUpUser, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: userData.fullName,
-            // Add any additional user data here
-          }
-        }
-      });
-
-      if (error) throw error;
-
-      // Create user profile
-      if (signedUpUser) {
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert([
-            {
-              id: signedUpUser.id,
-              full_name: userData.fullName,
-              role: 'user' // Default role
-            }
-          ]);
-
-        if (profileError) throw profileError;
-      }
-
-      return { user: signedUpUser, error: null };
-    } catch (error) {
-      return { user: null, error };
-    }
-  };
 
   // Sign in a user
   const signIn = async (email, password) => {
     try {
-      const { data: { user: signedInUser, session }, error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
       });
@@ -141,22 +107,26 @@ export function AuthProvider({ children }) {
       if (error) throw error;
 
       // Fetch user profile
-      if (signedInUser) {
+      if (data.user) {
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('*')
-          .eq('id', signedInUser.id)
+          .eq('id', data.user.id)
           .single();
 
         if (profileError) throw profileError;
 
         // Atualiza o estado do usuário com a role
         const userWithRole = {
-          ...signedInUser,
-          role: profile?.role || 'user'
+          ...data.user,
+          role: profile?.role || 'user',
+          fullName: profile?.full_name || 'Usuário'
         };
         
         setUser(userWithRole);
+        
+        // Atualizar o localStorage com os dados mais recentes
+        localStorage.setItem('userData', JSON.stringify(userWithRole));
         
         return {
           user: userWithRole,
@@ -177,8 +147,10 @@ export function AuthProvider({ children }) {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       setUser(null);
+      localStorage.removeItem('userData');
       return { error: null };
     } catch (error) {
+      console.error('Erro ao fazer logout:', error);
       return { error };
     }
   };
@@ -190,6 +162,7 @@ export function AuthProvider({ children }) {
       if (error) throw error;
       return { error: null };
     } catch (error) {
+      console.error('Erro ao redefinir senha:', error);
       return { error };
     }
   };
@@ -197,21 +170,28 @@ export function AuthProvider({ children }) {
   // Update user profile
   const updateProfile = async (updates) => {
     try {
+      if (!user) throw new Error('Usuário não autenticado');
+      
       const { data, error } = await supabase
         .from('profiles')
         .update(updates)
-        .eq('id', user.id);
+        .eq('id', user.id)
+        .select();
 
       if (error) throw error;
 
       // Update local user state
-      setUser(prev => ({
-        ...prev,
+      const updatedUser = {
+        ...user,
         ...updates
-      }));
+      };
+      
+      setUser(updatedUser);
+      localStorage.setItem('userData', JSON.stringify(updatedUser));
 
       return { data, error: null };
     } catch (error) {
+      console.error('Erro ao atualizar perfil:', error);
       return { data: null, error };
     }
   };
@@ -225,7 +205,6 @@ export function AuthProvider({ children }) {
   const value = {
     user,
     loading,
-    signUp,
     signIn,
     signOut,
     resetPassword,
@@ -236,7 +215,7 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider value={value}>
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   );
 }

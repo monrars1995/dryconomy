@@ -2,17 +2,17 @@ import React, { useState } from 'react';
 import {
   Box, Table, TableBody, TableCell, TableContainer, TableHead, 
   TableRow, TablePagination, Paper, CircularProgress, 
-  IconButton, Tooltip, TextField, InputAdornment, Typography,
-  Chip, useTheme
+  IconButton, Tooltip, Typography, useTheme, Chip, Dialog,
+  DialogTitle, DialogContent, DialogActions, Button, Alert
 } from '@mui/material';
 import {
-  Search as SearchIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
-  Home as HomeIcon
+  Home as HomeIcon,
+  Thermostat as ThermostatIcon,
+  WaterDrop as WaterDropIcon
 } from '@mui/icons-material';
 import { deleteCity } from '../../services/cityService';
-import DeleteConfirmDialog from './DeleteConfirmDialog';
 
 const CityList = ({
   cities,
@@ -22,38 +22,27 @@ const CityList = ({
   totalItems,
   onChangePage,
   onChangeRowsPerPage,
-  onSearchChange,
   onEditCity,
   onRefresh
 }) => {
   const theme = useTheme();
-  const [searchTerm, setSearchTerm] = useState('');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [cityToDelete, setCityToDelete] = useState(null);
-
-  // Manipulador de busca com debounce
-  const handleSearchChange = (e) => {
-    const value = e.target.value;
-    setSearchTerm(value);
-    
-    // Debounce de 500ms
-    const timeoutId = setTimeout(() => {
-      onSearchChange(value);
-    }, 500);
-    
-    return () => clearTimeout(timeoutId);
-  };
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState(null);
 
   // Abrir diálogo de confirmação de exclusão
   const handleOpenDeleteDialog = (city) => {
     setCityToDelete(city);
     setDeleteDialogOpen(true);
+    setDeleteError(null);
   };
 
   // Fechar diálogo de confirmação
   const handleCloseDeleteDialog = () => {
     setDeleteDialogOpen(false);
     setCityToDelete(null);
+    setDeleteError(null);
   };
 
   // Realizar exclusão após confirmação
@@ -61,52 +50,26 @@ const CityList = ({
     if (!cityToDelete) return;
     
     try {
+      setDeleteLoading(true);
+      setDeleteError(null);
+      
       const { error } = await deleteCity(cityToDelete.id);
       
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
       
       // Atualizar lista após excluir
       onRefresh();
+      handleCloseDeleteDialog();
     } catch (error) {
       console.error('Erro ao excluir cidade:', error);
-      // Implementar notificação de erro aqui
+      setDeleteError('Erro ao excluir cidade. Tente novamente.');
     } finally {
-      handleCloseDeleteDialog();
+      setDeleteLoading(false);
     }
   };
 
   return (
     <Box>
-      {/* Campo de busca */}
-      <Box sx={{ mb: 3 }}>
-        <TextField
-          fullWidth
-          variant="outlined"
-          placeholder="Buscar cidades..."
-          value={searchTerm}
-          onChange={handleSearchChange}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon sx={{ color: 'action.active' }} />
-              </InputAdornment>
-            ),
-          }}
-          sx={{
-            '& .MuiOutlinedInput-root': {
-              borderRadius: 2,
-              transition: 'all 0.3s',
-              '&:hover': {
-                borderColor: theme.palette.primary.main,
-              },
-            },
-          }}
-        />
-      </Box>
-
-      {/* Tabela de cidades */}
       <TableContainer component={Paper} sx={{ 
         borderRadius: 2,
         boxShadow: 'none',
@@ -121,9 +84,9 @@ const CityList = ({
               <TableCell sx={{ fontWeight: 'bold' }}>Nome</TableCell>
               <TableCell sx={{ fontWeight: 'bold' }}>Estado</TableCell>
               <TableCell sx={{ fontWeight: 'bold' }}>País</TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }}>Consumo Anual (Drycooler)</TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }}>Consumo Anual (Torre)</TableCell>
               <TableCell sx={{ fontWeight: 'bold' }}>Temperatura Média</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>Consumo (DryCooler)</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>Consumo (Torre)</TableCell>
               <TableCell align="right" sx={{ fontWeight: 'bold' }}>Ações</TableCell>
             </TableRow>
           </TableHead>
@@ -162,19 +125,37 @@ const CityList = ({
                   <TableCell>{city.state || '-'}</TableCell>
                   <TableCell>{city.country || 'Brasil'}</TableCell>
                   <TableCell>
-                    {city.water_consumption_year ? 
-                      `${Number(city.water_consumption_year).toLocaleString('pt-BR')} L/ano` : 
-                      '-'}
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <ThermostatIcon 
+                        fontSize="small" 
+                        sx={{ color: 'warning.main', mr: 0.5 }} 
+                      />
+                      {city.average_temperature ? 
+                        `${city.average_temperature}°C` : 
+                        '-'}
+                    </Box>
                   </TableCell>
                   <TableCell>
-                    {city.water_consumption_year_conventional ? 
-                      `${Number(city.water_consumption_year_conventional).toLocaleString('pt-BR')} L/ano` : 
-                      '-'}
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <WaterDropIcon 
+                        fontSize="small" 
+                        sx={{ color: 'primary.main', mr: 0.5 }} 
+                      />
+                      {city.water_consumption_year ? 
+                        `${Number(city.water_consumption_year).toLocaleString('pt-BR')} L/ano` : 
+                        '-'}
+                    </Box>
                   </TableCell>
                   <TableCell>
-                    {city.average_temperature ? 
-                      `${city.average_temperature}°C` : 
-                      '-'}
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <WaterDropIcon 
+                        fontSize="small" 
+                        sx={{ color: 'error.main', mr: 0.5 }} 
+                      />
+                      {city.water_consumption_year_conventional ? 
+                        `${Number(city.water_consumption_year_conventional).toLocaleString('pt-BR')} L/ano` : 
+                        '-'}
+                    </Box>
                   </TableCell>
                   <TableCell align="right">
                     <Tooltip title="Editar Cidade">
@@ -225,13 +206,54 @@ const CityList = ({
       />
 
       {/* Diálogo de confirmação de exclusão */}
-      <DeleteConfirmDialog
+      <Dialog
         open={deleteDialogOpen}
-        title="Excluir Cidade"
-        content={`Tem certeza que deseja excluir a cidade "${cityToDelete?.name}"? Esta ação não poderá ser desfeita.`}
-        onCancel={handleCloseDeleteDialog}
-        onConfirm={handleDeleteConfirm}
-      />
+        onClose={handleCloseDialog}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            p: 1
+          }
+        }}
+      >
+        <DialogTitle sx={{ fontWeight: 600 }}>
+          Excluir Cidade
+        </DialogTitle>
+        <DialogContent>
+          {deleteError && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {deleteError}
+            </Alert>
+          )}
+          <Typography variant="body1">
+            Tem certeza que deseja excluir a cidade "{cityToDelete?.name}"?
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+            Esta ação não poderá ser desfeita e todos os dados associados a esta cidade serão perdidos.
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ p: 2, pt: 0 }}>
+          <Button 
+            onClick={handleCloseDeleteDialog} 
+            disabled={deleteLoading}
+            variant="outlined"
+            sx={{ borderRadius: 2 }}
+          >
+            Cancelar
+          </Button>
+          <Button 
+            onClick={handleDeleteConfirm} 
+            color="error" 
+            variant="contained"
+            disabled={deleteLoading}
+            sx={{ borderRadius: 2 }}
+          >
+            {deleteLoading ? <CircularProgress size={24} /> : 'Excluir'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { CircularProgress, Box } from '@mui/material';
+import { CircularProgress, Box, Typography } from '@mui/material';
 
 const ProtectedRoute = () => {
   const { user, loading, isAuthenticated } = useAuth();
@@ -24,26 +24,26 @@ const ProtectedRoute = () => {
     checkAuth();
   }, [loading, isAuthenticated]);
   
-  // Log para diagnóstico
-  console.log('ProtectedRoute:', { 
-    loading, 
-    isCheckingAuth,
-    isAuthenticated,
-    userExists: !!user,
-    currentPath: location.pathname
-  });
-
   // Se estiver carregando ou verificando autenticação, mostra um indicador de carregamento
   if (loading || isCheckingAuth) {
-    console.log('ProtectedRoute: Verificando autenticação...');
     return (
       <Box 
         display="flex" 
+        flexDirection="column"
         justifyContent="center" 
         alignItems="center" 
         minHeight="100vh"
+        bgcolor="#f5f5f5"
       >
-        <CircularProgress />
+        <img 
+          src="/images/drylogo.png" 
+          alt="DryCooler Logo" 
+          style={{ height: 60, marginBottom: 24 }} 
+        />
+        <CircularProgress size={40} sx={{ mb: 2 }} />
+        <Typography variant="body1" color="text.secondary">
+          Verificando autenticação...
+        </Typography>
       </Box>
     );
   }
@@ -54,7 +54,6 @@ const ProtectedRoute = () => {
     return <Navigate to="/login" state={{ from: location.pathname }} replace />;
   }
 
-  console.log('ProtectedRoute: Usuário autenticado, renderizando conteúdo');
   // Se chegou até aqui, renderiza o componente filho
   return <Outlet />;
 };

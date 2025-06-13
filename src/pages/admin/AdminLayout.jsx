@@ -19,47 +19,47 @@ import {
   Menu,
   MenuItem,
   Tooltip,
-  CircularProgress
+  CircularProgress,
+  Collapse,
+  ListItemButton
 } from '@mui/material';
 import {
   Menu as MenuIcon,
-  Settings,
-  People,
-  TrendingUp,
-  Dashboard,
-  Webhook,
-  Logout,
-  AccountCircle,
-  LocationCity
+  Settings as SettingsIcon,
+  People as PeopleIcon,
+  Dashboard as DashboardIcon,
+  Webhook as WebhookIcon,
+  Logout as LogoutIcon,
+  AccountCircle as AccountCircleIcon,
+  LocationCity as LocationCityIcon,
+  ExpandLess as ExpandLessIcon,
+  ExpandMore as ExpandMoreIcon,
+  ChevronLeft as ChevronLeftIcon,
+  ChevronRight as ChevronRightIcon,
+  Home as HomeIcon
 } from '@mui/icons-material';
-import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { logout, getUserData } from '../../services/authService';
-import { useAuth } from '../../hooks/useAuth';
+import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
 import { supabase } from '../../services/authService';
+import { useAuth } from '../../hooks/useAuth';
 
-const DRAWER_WIDTH = 240;
+const DRAWER_WIDTH = 260;
 
 const AdminLayout = () => {
-  console.log('AdminLayout: Componente sendo renderizado');
-  
   const theme = useTheme();
   const isXs = useMediaQuery(theme.breakpoints.down('sm'));
   const [mobileOpen, setMobileOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, loading: authLoading } = useAuth();
-  
-  console.log('AdminLayout: Local atual:', location.pathname);
+  const { user, signOut } = useAuth();
   
   useEffect(() => {
     const loadUserData = async () => {
       try {
-        // Se o usuário estiver autenticado, mas não tivermos os dados do usuário
         if (user && !userData) {
-          // Tenta obter os dados do perfil do usuário
           const { data: profile, error } = await supabase
             .from('profiles')
             .select('*')
@@ -68,14 +68,11 @@ const AdminLayout = () => {
 
           if (error) throw error;
           
-          const userWithRole = {
+          setUserData({
             ...user,
-            role: profile?.role || 'user'
-          };
-          
-          setUserData(userWithRole);
-          // Atualiza o localStorage com os dados mais recentes
-          localStorage.setItem('userData', JSON.stringify(userWithRole));
+            role: profile?.role || 'user',
+            fullName: profile?.full_name || 'Usuário'
+          });
         }
       } catch (error) {
         console.error('Erro ao carregar dados do usuário:', error);
@@ -87,8 +84,7 @@ const AdminLayout = () => {
     loadUserData();
   }, [user, userData]);
   
-  // Se estiver carregando, mostra um indicador de carregamento
-  if (authLoading || loading) {
+  if (loading) {
     return (
       <Box 
         display="flex" 
@@ -102,11 +98,42 @@ const AdminLayout = () => {
   }
 
   const menuItems = [
-    { text: 'Dashboard', icon: <Dashboard />, path: '/admin/dashboard' },
-    { text: 'Variáveis de Cálculo', icon: <Settings />, path: '/admin/variaveis' },
-    { text: 'Cidades', icon: <LocationCity />, path: '/admin/cidades' },
-    { text: 'Leads', icon: <People />, path: '/admin/leads' },
-    { text: 'Webhooks', icon: <Webhook />, path: '/admin/webhooks' }
+    { 
+      text: 'Dashboard', 
+      icon: <DashboardIcon />, 
+      path: '/admin/dashboard',
+      active: location.pathname === '/admin/dashboard'
+    },
+    { 
+      text: 'Leads', 
+      icon: <PeopleIcon />, 
+      path: '/admin/leads',
+      active: location.pathname === '/admin/leads'
+    },
+    { 
+      text: 'Cidades', 
+      icon: <LocationCityIcon />, 
+      path: '/admin/cidades',
+      active: location.pathname === '/admin/cidades'
+    },
+    { 
+      text: 'Webhooks', 
+      icon: <WebhookIcon />, 
+      path: '/admin/webhooks',
+      active: location.pathname === '/admin/webhooks'
+    },
+    { 
+      text: 'Configurações', 
+      icon: <SettingsIcon />, 
+      submenu: [
+        { 
+          text: 'Variáveis de Cálculo', 
+          path: '/admin/variaveis',
+          active: location.pathname === '/admin/variaveis'
+        }
+      ],
+      active: location.pathname.includes('/admin/variaveis')
+    }
   ];
 
   const handleDrawerToggle = () => {
@@ -120,42 +147,212 @@ const AdminLayout = () => {
     }
   };
 
+  const handleSettingsClick = () => {
+    setSettingsOpen(!settingsOpen);
+  };
+
+  const handleProfileMenuOpen = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      navigate('/login');
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
+    }
+  };
+
   const drawer = (
     <Box>
-      <Toolbar>
-        <Typography variant="h6" noWrap component="div" sx={{ fontWeight: 600 }}>
-          Admin Panel
-        </Typography>
-      </Toolbar>
+      <Box sx={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'space-between',
+        p: 2
+      }}>
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <img 
+            src="/images/drylogo.png" 
+            alt="DryCooler Logo" 
+            style={{ height: 40, marginRight: 12 }} 
+          />
+          <Typography variant="h6" noWrap component="div" sx={{ fontWeight: 700 }}>
+            DryCooler
+          </Typography>
+        </Box>
+        {isXs && (
+          <IconButton onClick={handleDrawerToggle}>
+            {theme.direction === 'ltr' ? <ChevronLeftIcon /> : <ChevronRightIcon />}
+          </IconButton>
+        )}
+      </Box>
       <Divider />
-      <List>
-        {menuItems.map((item) => (
-          <ListItem
-            button
-            key={item.text}
-            onClick={() => handleNavigation(item.path)}
-            selected={location.pathname === item.path}
-            sx={{
-              '&.Mui-selected': {
-                backgroundColor: 'primary.main',
-                color: 'white',
-                '&:hover': {
-                  backgroundColor: 'primary.dark',
-                },
-                '& .MuiListItemIcon-root': {
-                  color: 'white',
-                },
-              },
+      
+      <Box sx={{ p: 2 }}>
+        <Box sx={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          p: 1.5,
+          borderRadius: 2,
+          bgcolor: 'primary.main',
+          color: 'white',
+          mb: 2
+        }}>
+          <Avatar 
+            sx={{ 
+              bgcolor: 'white', 
+              color: 'primary.main',
+              width: 40,
+              height: 40
             }}
           >
-            <ListItemIcon sx={{ 
-              color: location.pathname === item.path ? 'white' : 'inherit'
-            }}>
-              {item.icon}
-            </ListItemIcon>
-            <ListItemText primary={item.text} />
-          </ListItem>
+            {userData?.fullName?.charAt(0) || 'U'}
+          </Avatar>
+          <Box sx={{ ml: 2 }}>
+            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+              {userData?.fullName || 'Usuário'}
+            </Typography>
+            <Typography variant="caption">
+              {userData?.role === 'admin' ? 'Administrador' : 'Usuário'}
+            </Typography>
+          </Box>
+        </Box>
+      </Box>
+      
+      <List component="nav" sx={{ px: 2 }}>
+        {menuItems.map((item) => (
+          item.submenu ? (
+            <React.Fragment key={item.text}>
+              <ListItem 
+                disablePadding
+                button
+                onClick={handleSettingsClick}
+                sx={{
+                  borderRadius: 2,
+                  mb: 1,
+                  bgcolor: item.active ? 'primary.main' : 'transparent',
+                  color: item.active ? 'white' : 'inherit',
+                  '&:hover': {
+                    bgcolor: item.active ? 'primary.dark' : 'action.hover',
+                  },
+                }}
+              >
+                <ListItemButton sx={{ borderRadius: 2 }}>
+                  <ListItemIcon sx={{ 
+                    color: item.active ? 'white' : 'inherit'
+                  }}>
+                    {item.icon}
+                  </ListItemIcon>
+                  <ListItemText primary={item.text} />
+                  {settingsOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                </ListItemButton>
+              </ListItem>
+              <Collapse in={settingsOpen} timeout="auto" unmountOnExit>
+                <List component="div" disablePadding>
+                  {item.submenu.map((subitem) => (
+                    <ListItem
+                      key={subitem.text}
+                      disablePadding
+                      button
+                      onClick={() => handleNavigation(subitem.path)}
+                      sx={{
+                        pl: 4,
+                        borderRadius: 2,
+                        mb: 1,
+                        bgcolor: subitem.active ? 'primary.light' : 'transparent',
+                        color: subitem.active ? 'white' : 'inherit',
+                        '&:hover': {
+                          bgcolor: subitem.active ? 'primary.main' : 'action.hover',
+                        },
+                      }}
+                    >
+                      <ListItemButton sx={{ borderRadius: 2 }}>
+                        <ListItemText primary={subitem.text} />
+                      </ListItemButton>
+                    </ListItem>
+                  ))}
+                </List>
+              </Collapse>
+            </React.Fragment>
+          ) : (
+            <ListItem
+              key={item.text}
+              disablePadding
+              button
+              onClick={() => handleNavigation(item.path)}
+              sx={{
+                borderRadius: 2,
+                mb: 1,
+                bgcolor: item.active ? 'primary.main' : 'transparent',
+                color: item.active ? 'white' : 'inherit',
+                '&:hover': {
+                  bgcolor: item.active ? 'primary.dark' : 'action.hover',
+                },
+              }}
+            >
+              <ListItemButton sx={{ borderRadius: 2 }}>
+                <ListItemIcon sx={{ 
+                  color: item.active ? 'white' : 'inherit'
+                }}>
+                  {item.icon}
+                </ListItemIcon>
+                <ListItemText primary={item.text} />
+              </ListItemButton>
+            </ListItem>
+          )
         ))}
+      </List>
+      
+      <Divider sx={{ my: 2 }} />
+      
+      <List sx={{ px: 2 }}>
+        <ListItem
+          disablePadding
+          button
+          component={Link}
+          to="/"
+          sx={{
+            borderRadius: 2,
+            mb: 1,
+            '&:hover': {
+              bgcolor: 'action.hover',
+            },
+          }}
+        >
+          <ListItemButton sx={{ borderRadius: 2 }}>
+            <ListItemIcon>
+              <HomeIcon />
+            </ListItemIcon>
+            <ListItemText primary="Ir para o Site" />
+          </ListItemButton>
+        </ListItem>
+        
+        <ListItem
+          disablePadding
+          button
+          onClick={handleLogout}
+          sx={{
+            borderRadius: 2,
+            color: 'error.main',
+            '&:hover': {
+              bgcolor: 'error.main',
+              color: 'white',
+            },
+          }}
+        >
+          <ListItemButton sx={{ borderRadius: 2 }}>
+            <ListItemIcon sx={{ color: 'inherit' }}>
+              <LogoutIcon />
+            </ListItemIcon>
+            <ListItemText primary="Sair" />
+          </ListItemButton>
+        </ListItem>
       </List>
     </Box>
   );
@@ -167,7 +364,8 @@ const AdminLayout = () => {
         sx={{
           width: { sm: `calc(100% - ${DRAWER_WIDTH}px)` },
           ml: { sm: `${DRAWER_WIDTH}px` },
-          bgcolor: '#00337A', // Adicionado cor específica
+          bgcolor: '#00337A',
+          boxShadow: 3
         }}
       >
         <Toolbar>
@@ -180,46 +378,44 @@ const AdminLayout = () => {
           >
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-            Aludry DryCooler - Administração
+          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1, fontWeight: 600 }}>
+            Painel Administrativo
           </Typography>
           
-          {userData && (
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <Tooltip title="Configurações de conta">
-                <IconButton
-                  onClick={(e) => setAnchorEl(e.currentTarget)}
-                  color="inherit"
-                  size="small"
-                  sx={{ ml: 2 }}
-                >
-                  <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.dark' }}>
-                    {userData.name ? userData.name.charAt(0).toUpperCase() : 'U'}
-                  </Avatar>
-                </IconButton>
-              </Tooltip>
-              <Menu
-                anchorEl={anchorEl}
-                open={Boolean(anchorEl)}
-                onClose={() => setAnchorEl(null)}
-                onClick={() => setAnchorEl(null)}
-                PaperProps={{
-                  sx: { minWidth: 180 }
-                }}
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <Tooltip title="Configurações de conta">
+              <IconButton
+                onClick={handleProfileMenuOpen}
+                color="inherit"
+                size="small"
+                sx={{ ml: 2 }}
               >
-                <MenuItem disabled>
-                  <Typography variant="body2">{userData.email}</Typography>
-                </MenuItem>
-                <Divider />
-                <MenuItem onClick={() => logout()}>
-                  <ListItemIcon>
-                    <Logout fontSize="small" />
-                  </ListItemIcon>
-                  <ListItemText primary="Sair" />
-                </MenuItem>
-              </Menu>
-            </Box>
-          )}
+                <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.dark' }}>
+                  {userData?.fullName?.charAt(0).toUpperCase() || 'U'}
+                </Avatar>
+              </IconButton>
+            </Tooltip>
+            <Menu
+              anchorEl={anchorEl}
+              open={Boolean(anchorEl)}
+              onClose={handleMenuClose}
+              onClick={handleMenuClose}
+              PaperProps={{
+                sx: { minWidth: 180 }
+              }}
+            >
+              <MenuItem disabled>
+                <Typography variant="body2">{userData?.email}</Typography>
+              </MenuItem>
+              <Divider />
+              <MenuItem onClick={handleLogout}>
+                <ListItemIcon>
+                  <LogoutIcon fontSize="small" />
+                </ListItemIcon>
+                <ListItemText primary="Sair" />
+              </MenuItem>
+            </Menu>
+          </Box>
         </Toolbar>
       </AppBar>
 
@@ -241,6 +437,7 @@ const AdminLayout = () => {
               background: theme.palette.mode === 'dark'
                 ? 'linear-gradient(145deg, #1a1a1a 0%, #2d2d2d 100%)'
                 : 'linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%)',
+              borderRight: `1px solid ${theme.palette.divider}`,
             },
           }}
         >
@@ -266,9 +463,9 @@ const AdminLayout = () => {
             background: theme.palette.mode === 'dark'
               ? 'linear-gradient(145deg, #1e1e1e 0%, #2d2d2d 100%)'
               : 'linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%)',
+            borderRadius: 3
           }}
         >
-          {console.log('AdminLayout: Tentando renderizar Outlet')}
           <Outlet />
         </Paper>
       </Box>
