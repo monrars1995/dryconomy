@@ -15,6 +15,7 @@ import UserDataForm from './components/UserDataForm';
 import SimulationParametersForm from './components/SimulationParametersForm';
 import CitySelectionForm from './components/CitySelectionForm';
 import WaterSavingsResults from './components/WaterSavingsResults';
+import ThankYouPage from './components/ThankYouPage';
 import PrivacyBanner from './components/PrivacyBanner';
 import BudgetRequestModal from './components/BudgetRequestModal';
 
@@ -48,6 +49,8 @@ const App = () => {
   const [showSimulator, setShowSimulator] = useState(false);
   const [simulationStarted, setSimulationStarted] = useState(false);
   const [completedSteps, setCompletedSteps] = useState([]);
+  const [simulationCompleted, setSimulationCompleted] = useState(false);
+  const [budgetRequestData, setBudgetRequestData] = useState(null);
   
   // Estados para notificações
   const [notification, setNotification] = useState({
@@ -313,13 +316,14 @@ const App = () => {
   const isSm = useMediaQuery('(max-width:960px)');
   const isMd = useMediaQuery('(max-width:1280px)');
 
-  // Constantes melhoradas - CORRIGIDO: 5 etapas
+  // Constantes melhoradas - CORRIGIDO: 6 etapas (incluindo página de obrigado)
   const steps = [
     { label: 'Início', description: 'Bem-vindo ao simulador' },
     { label: 'Dados Pessoais', description: 'Suas informações de contato' },
     { label: 'Parâmetros', description: 'Configurações da simulação' },
     { label: 'Localização', description: 'Selecione sua cidade' },
-    { label: 'Resultados', description: 'Análise de economia' }
+    { label: 'Resultados', description: 'Análise de economia' },
+    { label: 'Obrigado', description: 'Finalização' }
   ];
 
   // Salvar preferência de tema
@@ -481,8 +485,10 @@ const App = () => {
   const handleRestart = () => {
     setShowSimulator(false);
     setSimulationStarted(false);
+    setSimulationCompleted(false);
     setActiveStep(0);
     setCompletedSteps([]);
+    setBudgetRequestData(null);
     // Reset form data
     setUserData({
       name: '',
@@ -569,8 +575,11 @@ const App = () => {
 
       await saveSimulation(simulationData);
       
-      // Marcar última etapa como completa
+      // Marcar última etapa como completa e ir para página de obrigado
       setCompletedSteps(prev => [...prev, activeStep]);
+      setBudgetRequestData(budgetData);
+      setSimulationCompleted(true);
+      setActiveStep(5); // Ir para a página de obrigado
       
     } catch (error) {
       console.error('Erro ao finalizar simulação:', error);
@@ -602,6 +611,14 @@ const App = () => {
         />;
       case 4:
         return <WaterSavingsResults results={results} inputs={inputs} darkMode={darkMode} />;
+      case 5:
+        return <ThankYouPage 
+          userData={userData}
+          simulationResults={{ inputs, comparison: results.comparison }}
+          budgetRequested={budgetRequestData?.wantsBudget}
+          onRestart={handleRestart}
+          darkMode={darkMode}
+        />;
       default:
         return (
           <Box sx={{ textAlign: 'center', py: 8 }}>
@@ -741,37 +758,43 @@ const App = () => {
                 <WelcomePage onStartSimulation={handleStartSimulation} darkMode={darkMode} />
               ) : (
                 <>
-                  {/* Progress Indicator */}
-                  <ProgressIndicator
-                    currentStep={activeStep}
-                    totalSteps={steps.length}
-                    stepLabels={steps.map(s => s.label)}
-                  />
+                  {/* Progress Indicator - não mostrar na página de obrigado */}
+                  {activeStep < 5 && (
+                    <ProgressIndicator
+                      currentStep={activeStep}
+                      totalSteps={steps.length - 1} // Excluir página de obrigado do progresso
+                      stepLabels={steps.slice(0, -1).map(s => s.label)} // Excluir página de obrigado
+                    />
+                  )}
 
-                  {/* Stepper melhorado */}
-                  <ImprovedStepper
-                    activeStep={activeStep}
-                    steps={steps}
-                    completedSteps={completedSteps}
-                    orientation={isXs ? 'vertical' : 'horizontal'}
-                  />
+                  {/* Stepper melhorado - não mostrar na página de obrigado */}
+                  {activeStep < 5 && (
+                    <ImprovedStepper
+                      activeStep={activeStep}
+                      steps={steps.slice(0, -1)} // Excluir página de obrigado
+                      completedSteps={completedSteps}
+                      orientation={isXs ? 'vertical' : 'horizontal'}
+                    />
+                  )}
 
                   {/* Conteúdo do Passo Atual */}
                   <Box sx={{ minHeight: '50vh', py: 4 }}>
                     {renderStepContent(activeStep)}
                   </Box>
 
-                  {/* Navegação Responsiva */}
-                  <ResponsiveNavigation
-                    activeStep={activeStep}
-                    totalSteps={steps.length}
-                    onBack={handleBack}
-                    onNext={handleNext}
-                    onFinish={handleFinishSimulation}
-                    onHome={handleRestart}
-                    isLoading={isLoading}
-                    canProceed={canProceed()}
-                  />
+                  {/* Navegação Responsiva - não mostrar na página de obrigado */}
+                  {activeStep < 5 && (
+                    <ResponsiveNavigation
+                      activeStep={activeStep}
+                      totalSteps={steps.length - 1} // Excluir página de obrigado
+                      onBack={handleBack}
+                      onNext={handleNext}
+                      onFinish={handleFinishSimulation}
+                      onHome={handleRestart}
+                      isLoading={isLoading}
+                      canProceed={canProceed()}
+                    />
+                  )}
                 </>
               )}
             </Box>
