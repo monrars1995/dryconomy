@@ -7,7 +7,7 @@ import AppRoutes from './AppRoutes';
 import './styles/accessibility.css';
 
 // Configurar foco visível apenas para navegação por teclado
-import 'focus-visible/dist/focus-visible';
+import 'focus-visible';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
