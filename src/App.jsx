@@ -116,7 +116,7 @@ const App = () => {
   // Estados para o modal de orçamento
   const [budgetModalOpen, setBudgetModalOpen] = useState(false);
 
-  // Configurações de tema melhoradas
+  // Configurações de tema melhoradas - FOCO NA LEGIBILIDADE DO MODO LIGHT
   const theme = createTheme({
     palette: {
       mode: darkMode ? 'dark' : 'light',
@@ -130,23 +130,65 @@ const App = () => {
         main: '#dc004e',
       },
       background: {
-        default: darkMode ? '#121212' : '#f5f5f5',
+        default: darkMode ? '#121212' : '#fafafa', // Fundo mais suave no light
         paper: darkMode ? '#1e1e1e' : '#ffffff'
+      },
+      text: {
+        primary: darkMode ? '#ffffff' : '#1a1a1a', // Texto mais escuro no light
+        secondary: darkMode ? 'rgba(255,255,255,0.7)' : '#4a4a4a', // Texto secundário mais legível
       },
       success: {
         main: '#2e7d32',
         light: '#4caf50',
         dark: '#1b5e20'
-      }
+      },
+      // Melhorar contraste para elementos de ação
+      action: {
+        hover: darkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
+        selected: darkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)',
+        disabled: darkMode ? 'rgba(255, 255, 255, 0.26)' : 'rgba(0, 0, 0, 0.26)',
+        disabledBackground: darkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.12)',
+      },
+      // Melhorar divisores
+      divider: darkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)',
     },
     typography: {
       fontFamily: '"Poppins", "Roboto", "Helvetica", "Arial", sans-serif',
-      h1: { fontWeight: 700 },
-      h2: { fontWeight: 600 },
-      h3: { fontWeight: 600 },
-      h4: { fontWeight: 600 },
-      h5: { fontWeight: 500 },
-      h6: { fontWeight: 500 },
+      h1: { 
+        fontWeight: 700,
+        color: darkMode ? '#ffffff' : '#1a1a1a'
+      },
+      h2: { 
+        fontWeight: 600,
+        color: darkMode ? '#ffffff' : '#1a1a1a'
+      },
+      h3: { 
+        fontWeight: 600,
+        color: darkMode ? '#ffffff' : '#1a1a1a'
+      },
+      h4: { 
+        fontWeight: 600,
+        color: darkMode ? '#ffffff' : '#1a1a1a'
+      },
+      h5: { 
+        fontWeight: 500,
+        color: darkMode ? '#ffffff' : '#1a1a1a'
+      },
+      h6: { 
+        fontWeight: 500,
+        color: darkMode ? '#ffffff' : '#1a1a1a'
+      },
+      body1: {
+        color: darkMode ? 'rgba(255,255,255,0.87)' : '#2c2c2c',
+        lineHeight: 1.6
+      },
+      body2: {
+        color: darkMode ? 'rgba(255,255,255,0.7)' : '#4a4a4a',
+        lineHeight: 1.5
+      },
+      caption: {
+        color: darkMode ? 'rgba(255,255,255,0.6)' : '#6a6a6a'
+      }
     },
     components: {
       MuiButton: {
@@ -161,6 +203,12 @@ const App = () => {
               transform: 'translateY(-1px)',
               boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
             }
+          },
+          contained: {
+            boxShadow: darkMode ? '0 2px 8px rgba(0,0,0,0.3)' : '0 2px 8px rgba(0,0,0,0.1)',
+            '&:hover': {
+              boxShadow: darkMode ? '0 4px 16px rgba(0,0,0,0.4)' : '0 4px 16px rgba(0,0,0,0.15)'
+            }
           }
         }
       },
@@ -168,6 +216,89 @@ const App = () => {
         styleOverrides: {
           root: {
             borderRadius: 12,
+            // Melhor sombra para modo light
+            boxShadow: darkMode 
+              ? '0 8px 32px rgba(0,0,0,0.3)' 
+              : '0 2px 12px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)',
+          }
+        }
+      },
+      MuiCard: {
+        styleOverrides: {
+          root: {
+            // Melhor contraste para cards no modo light
+            backgroundColor: darkMode ? '#1e1e1e' : '#ffffff',
+            border: darkMode ? 'none' : '1px solid rgba(0,0,0,0.06)',
+            boxShadow: darkMode 
+              ? '0 4px 20px rgba(0,0,0,0.3)' 
+              : '0 1px 8px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)',
+          }
+        }
+      },
+      MuiTextField: {
+        styleOverrides: {
+          root: {
+            '& .MuiOutlinedInput-root': {
+              backgroundColor: darkMode ? 'rgba(255,255,255,0.05)' : '#ffffff',
+              '& fieldset': {
+                borderColor: darkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.15)',
+              },
+              '&:hover fieldset': {
+                borderColor: darkMode ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.25)',
+              },
+              '&.Mui-focused fieldset': {
+                borderColor: '#00337A',
+                borderWidth: '2px',
+              },
+            },
+            '& .MuiInputLabel-root': {
+              color: darkMode ? 'rgba(255,255,255,0.7)' : '#4a4a4a',
+              '&.Mui-focused': {
+                color: '#00337A',
+              }
+            },
+            '& .MuiOutlinedInput-input': {
+              color: darkMode ? '#ffffff' : '#1a1a1a',
+            }
+          }
+        }
+      },
+      MuiChip: {
+        styleOverrides: {
+          root: {
+            backgroundColor: darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)',
+            color: darkMode ? '#ffffff' : '#2c2c2c',
+            '&.MuiChip-colorPrimary': {
+              backgroundColor: darkMode ? 'rgba(25,118,210,0.3)' : 'rgba(0,51,122,0.1)',
+              color: darkMode ? '#90caf9' : '#00337A',
+            }
+          }
+        }
+      },
+      MuiAlert: {
+        styleOverrides: {
+          root: {
+            borderRadius: 8,
+          },
+          standardSuccess: {
+            backgroundColor: darkMode ? 'rgba(46,125,50,0.2)' : 'rgba(46,125,50,0.08)',
+            color: darkMode ? '#81c784' : '#2e7d32',
+            border: darkMode ? '1px solid rgba(46,125,50,0.3)' : '1px solid rgba(46,125,50,0.2)',
+          },
+          standardInfo: {
+            backgroundColor: darkMode ? 'rgba(25,118,210,0.2)' : 'rgba(25,118,210,0.08)',
+            color: darkMode ? '#90caf9' : '#1976d2',
+            border: darkMode ? '1px solid rgba(25,118,210,0.3)' : '1px solid rgba(25,118,210,0.2)',
+          },
+          standardWarning: {
+            backgroundColor: darkMode ? 'rgba(237,108,2,0.2)' : 'rgba(237,108,2,0.08)',
+            color: darkMode ? '#ffb74d' : '#ed6c02',
+            border: darkMode ? '1px solid rgba(237,108,2,0.3)' : '1px solid rgba(237,108,2,0.2)',
+          },
+          standardError: {
+            backgroundColor: darkMode ? 'rgba(211,47,47,0.2)' : 'rgba(211,47,47,0.08)',
+            color: darkMode ? '#f48fb1' : '#d32f2f',
+            border: darkMode ? '1px solid rgba(211,47,47,0.3)' : '1px solid rgba(211,47,47,0.2)',
           }
         }
       }
@@ -530,7 +661,7 @@ const App = () => {
               position: 'relative',
               background: darkMode 
                 ? 'linear-gradient(145deg, #1e1e1e 0%, #2d2d2d 100%)'
-                : 'linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%)',
+                : 'linear-gradient(145deg, #ffffff 0%, #fafafa 100%)',
             }}
           >
             {/* Cabeçalho melhorado */}
@@ -544,7 +675,7 @@ const App = () => {
                 borderColor: 'divider',
                 background: darkMode 
                   ? 'rgba(0, 51, 122, 0.1)' 
-                  : 'rgba(0, 51, 122, 0.05)'
+                  : 'rgba(0, 51, 122, 0.03)'
               }}
             >
               <Box display="flex" alignItems="center" gap={2}>
