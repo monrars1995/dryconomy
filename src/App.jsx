@@ -12,6 +12,8 @@ import { useNavigate } from 'react-router-dom';
 // Componentes do Simulador
 import WelcomePage from './components/WelcomePage';
 import UserDataForm from './components/UserDataForm';
+import SimulationParametersForm from './components/SimulationParametersForm';
+import CitySelectionForm from './components/CitySelectionForm';
 import WaterSavingsResults from './components/WaterSavingsResults';
 import PrivacyBanner from './components/PrivacyBanner';
 
@@ -58,7 +60,9 @@ const App = () => {
     capacity: 500,
     location: 'São Paulo',
     deltaT: 6,
-    waterFlow: 71.7
+    waterFlow: 71.7,
+    operatingHours: 24,
+    operatingDays: 365
   });
   
   const [userData, setUserData] = useState({
@@ -69,7 +73,7 @@ const App = () => {
     state: ''
   });
 
-  // Estados para resultados - com valores padrão para evitar erros
+  // Estados para resultados - com valores calculados dinamicamente
   const [results, setResults] = useState({
     drycooler: {
       moduleCapacity: 168.74,
@@ -241,6 +245,81 @@ const App = () => {
     loadCities();
   }, [inputs.location]);
 
+  // Função para calcular resultados baseado nos inputs
+  const calculateResults = () => {
+    const { capacity, operatingHours, operatingDays } = inputs;
+    
+    // Cálculos para DryCooler
+    const drycoolerHourlyConsumption = capacity * 0.00186; // L/h por kW
+    const drycoolerDailyConsumption = drycoolerHourlyConsumption * operatingHours;
+    const drycoolerMonthlyConsumption = drycoolerDailyConsumption * 30;
+    const drycoolerYearlyConsumption = drycoolerDailyConsumption * operatingDays;
+    
+    // Cálculos para Torre
+    const towerHourlyConsumption = capacity * 0.019; // L/h por kW
+    const towerDailyConsumption = towerHourlyConsumption * operatingHours;
+    const towerMonthlyConsumption = towerDailyConsumption * 30;
+    const towerYearlyConsumption = towerDailyConsumption * operatingDays;
+    
+    // Economia
+    const yearlyDifference = towerYearlyConsumption - drycoolerYearlyConsumption;
+    const yearlyDifferencePercentage = (yearlyDifference / towerYearlyConsumption) * 100;
+    
+    const newResults = {
+      drycooler: {
+        moduleCapacity: 168.74,
+        modules: Math.ceil(capacity / 168.74),
+        totalCapacity: Math.ceil(capacity / 168.74) * 168.74,
+        nominalWaterFlow: 24.2,
+        evaporationPercentage: 0.16,
+        evaporationFlow: 0.0387,
+        consumption: {
+          hourly: drycoolerHourlyConsumption,
+          daily: drycoolerDailyConsumption,
+          monthly: drycoolerMonthlyConsumption,
+          yearly: drycoolerYearlyConsumption
+        }
+      },
+      tower: {
+        capacity: capacity,
+        consumption: {
+          hourly: towerHourlyConsumption,
+          daily: towerDailyConsumption,
+          monthly: towerMonthlyConsumption,
+          yearly: towerYearlyConsumption
+        }
+      },
+      savings: {
+        water: { 
+          daily: towerDailyConsumption - drycoolerDailyConsumption,
+          monthly: towerMonthlyConsumption - drycoolerMonthlyConsumption,
+          yearly: yearlyDifference
+        },
+        cost: { 
+          daily: (towerDailyConsumption - drycoolerDailyConsumption) * 0.0105,
+          monthly: (towerMonthlyConsumption - drycoolerMonthlyConsumption) * 0.0105,
+          yearly: yearlyDifference * 0.0105
+        },
+        co2: { 
+          daily: (towerDailyConsumption - drycoolerDailyConsumption) * 0.00058,
+          monthly: (towerMonthlyConsumption - drycoolerMonthlyConsumption) * 0.00058,
+          yearly: yearlyDifference * 0.00058
+        }
+      },
+      comparison: {
+        yearlyDifference,
+        yearlyDifferencePercentage
+      }
+    };
+    
+    setResults(newResults);
+  };
+
+  // Recalcular quando inputs mudarem
+  useEffect(() => {
+    calculateResults();
+  }, [inputs]);
+
   // Manipuladores de navegação melhorados
   const handleNext = () => {
     // Marcar etapa atual como completa
@@ -277,6 +356,14 @@ const App = () => {
       phone: '',
       state: ''
     });
+    setInputs({
+      capacity: 500,
+      location: 'São Paulo',
+      deltaT: 6,
+      waterFlow: 71.7,
+      operatingHours: 24,
+      operatingDays: 365
+    });
   };
 
   const handleInputChange = (e) => {
@@ -297,6 +384,25 @@ const App = () => {
       // Auto-avançar se dados válidos
       setTimeout(() => handleNext(), 500);
     }
+  };
+
+  const handleParametersChange = (newParams) => {
+    setInputs(prev => ({
+      ...prev,
+      ...newParams
+    }));
+    // Auto-avançar após configurar parâmetros
+    setTimeout(() => handleNext(), 500);
+  };
+
+  const handleCityChange = (cityData) => {
+    setSelectedCity(cityData);
+    setInputs(prev => ({
+      ...prev,
+      location: cityData.name
+    }));
+    // Auto-avançar após selecionar cidade
+    setTimeout(() => handleNext(), 500);
   };
 
   const handleFinishSimulation = async () => {
@@ -352,6 +458,15 @@ const App = () => {
         return <WelcomePage onStartSimulation={handleStartSimulation} darkMode={darkMode} />;
       case 1:
         return <UserDataForm userData={userData} onChange={handleUserDataChange} darkMode={darkMode} />;
+      case 2:
+        return <SimulationParametersForm inputs={inputs} onChange={handleParametersChange} darkMode={darkMode} />;
+      case 3:
+        return <CitySelectionForm 
+          cities={citiesData} 
+          selectedCity={selectedCity} 
+          onChange={handleCityChange} 
+          darkMode={darkMode} 
+        />;
       case 4:
         return <WaterSavingsResults results={results} inputs={inputs} darkMode={darkMode} />;
       default:
@@ -373,6 +488,10 @@ const App = () => {
     switch (activeStep) {
       case 1:
         return userData.name && userData.email;
+      case 2:
+        return inputs.capacity > 0;
+      case 3:
+        return selectedCity !== null;
       default:
         return true;
     }
