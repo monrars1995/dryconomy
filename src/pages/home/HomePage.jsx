@@ -14,7 +14,7 @@ import {
   WaterDrop as WaterDropIcon,
   Calculate as CalculateIcon,
   TrendingUp as TrendingUpIcon,
-  Eco as EcoIcon
+  EmojiNature as EcoIcon
 } from '@mui/icons-material';
 
 const HomePage = () => {
