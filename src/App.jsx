@@ -378,16 +378,10 @@ const App = () => {
     }));
   };
 
+  // CORRIGIDO: Remover auto-avanço da função handleUserDataChange
   const handleUserDataChange = (newUserData) => {
     setUserData(newUserData);
-    // Verificar se todos os campos obrigatórios estão preenchidos
-    const requiredFields = ['name', 'email'];
-    const isValid = requiredFields.every(field => newUserData[field]?.trim());
-    
-    if (isValid) {
-      // Auto-avançar se dados válidos
-      setTimeout(() => handleNext(), 500);
-    }
+    // Não fazer auto-avanço aqui - deixar o usuário clicar em "Próximo"
   };
 
   const handleParametersChange = (newParams) => {
@@ -395,7 +389,7 @@ const App = () => {
       ...prev,
       ...newParams
     }));
-    // Auto-avançar após configurar parâmetros
+    // Auto-avanço após configurar parâmetros
     setTimeout(() => handleNext(), 500);
   };
 
@@ -405,7 +399,7 @@ const App = () => {
       ...prev,
       location: cityData.name
     }));
-    // Auto-avançar após selecionar cidade
+    // Auto-avanço após selecionar cidade
     setTimeout(() => handleNext(), 500);
   };
 
