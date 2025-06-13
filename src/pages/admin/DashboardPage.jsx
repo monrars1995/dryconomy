@@ -22,7 +22,7 @@ import {
   TrendingUp as TrendingUpIcon,
   Refresh as RefreshIcon,
   WaterDrop as WaterDropIcon,
-  Eco as EcoIcon,
+  EmojiNature as EcoIcon,
   Business as BusinessIcon,
   Timeline as TimelineIcon
 } from '@mui/icons-material';
