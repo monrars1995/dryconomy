@@ -11,6 +11,7 @@ export function AuthProvider({ children }) {
     // Check active sessions and set the user
     const getInitialSession = async () => {
       try {
+        setLoading(true);
         // Verificar sessão ativa do Supabase
         const { data: { session } } = await supabase.auth.getSession();
         

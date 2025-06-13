@@ -21,8 +21,10 @@ const ProtectedRoute = () => {
       }
     };
     
-    checkAuth();
-  }, [loading, isAuthenticated]);
+    if (!loading) {
+      checkAuth();
+    }
+  }, [loading]);
   
   // Se estiver carregando ou verificando autenticação, mostra um indicador de carregamento
   if (loading || isCheckingAuth) {

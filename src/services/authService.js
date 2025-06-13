@@ -46,10 +46,11 @@ export const login = async (email, password) => {
     // Armazenar dados do usuário no localStorage para acesso rápido
     localStorage.setItem('userData', JSON.stringify({
       ...data.user,
-      role: profile?.role || 'user'
+      role: profile?.role || 'user',
+      fullName: profile?.full_name || 'Usuário'
     }));
     
-    return { user: { ...data.user, role: profile?.role || 'user' } };
+    return { user: { ...data.user, role: profile?.role || 'user', fullName: profile?.full_name || 'Usuário' } };
   } catch (error) {
     console.error('Erro ao fazer login:', error);
     throw error;
@@ -88,7 +89,7 @@ export const isAuthenticated = async () => {
 /**
  * Função para obter o token de autenticação
  * 
- * @returns {string|null} Token de autenticação ou null se não estiver autenticado
+ * @returns {Promise<string|null>} Token de autenticação ou null se não estiver autenticado
  */
 export const getAuthToken = async () => {
   try {
@@ -123,7 +124,7 @@ export const isAdmin = () => {
 /**
  * Função para obter cabeçalhos de autenticação para requisições à API
  * 
- * @returns {Object} Cabeçalhos HTTP com token de autenticação
+ * @returns {Promise<Object>} Cabeçalhos HTTP com token de autenticação
  */
 export const getAuthHeaders = async () => {
   const token = await getAuthToken();

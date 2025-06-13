@@ -49,53 +49,14 @@ const AdminLayout = () => {
   const isXs = useMediaQuery(theme.breakpoints.down('sm'));
   const [mobileOpen, setMobileOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
-  const [userData, setUserData] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { user, signOut } = useAuth();
   
-  useEffect(() => {
-    const loadUserData = async () => {
-      try {
-        if (user && !userData) {
-          const { data: profile, error } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', user.id)
-            .single();
-
-          if (error) throw error;
-          
-          setUserData({
-            ...user,
-            role: profile?.role || 'user',
-            fullName: profile?.full_name || 'Usuário'
-          });
-        }
-      } catch (error) {
-        console.error('Erro ao carregar dados do usuário:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    loadUserData();
-  }, [user, userData]);
-  
-  if (loading) {
-    return (
-      <Box 
-        display="flex" 
-        justifyContent="center" 
-        alignItems="center" 
-        minHeight="100vh"
-      >
-        <CircularProgress />
-      </Box>
-    );
-  }
+  // Use user data directly from useAuth hook
+  const userData = user || {};
+  const [loading, setLoading] = useState(false);
 
   const menuItems = [
     { 
@@ -161,10 +122,13 @@ const AdminLayout = () => {
 
   const handleLogout = async () => {
     try {
+      setLoading(true);
       await signOut();
       navigate('/login');
     } catch (error) {
       console.error('Erro ao fazer logout:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -182,7 +146,7 @@ const AdminLayout = () => {
             alt="DryCooler Logo" 
             style={{ height: 40, marginRight: 12 }} 
           />
-          <Typography variant="h6" noWrap component="div" sx={{ fontWeight: 700 }}>
+          <Typography variant="h6" noWrap component="div" sx={{ fontWeight: 700, color: 'text.primary' }}>
             DryCooler
           </Typography>
         </Box>
@@ -212,13 +176,13 @@ const AdminLayout = () => {
               height: 40
             }}
           >
-            {userData?.fullName?.charAt(0) || 'U'}
+            {userData?.fullName?.charAt(0) || userData?.email?.charAt(0) || 'U'}
           </Avatar>
           <Box sx={{ ml: 2 }}>
-            <Typography variant="body2" sx={{ fontWeight: 600 }}>
-              {userData?.fullName || 'Usuário'}
+            <Typography variant="body2" sx={{ fontWeight: 600, color: 'white' }}>
+              {userData?.fullName || userData?.email || 'Usuário'}
             </Typography>
-            <Typography variant="caption">
+            <Typography variant="caption" sx={{ color: 'white' }}>
               {userData?.role === 'admin' ? 'Administrador' : 'Usuário'}
             </Typography>
           </Box>
@@ -244,7 +208,7 @@ const AdminLayout = () => {
               >
                 <ListItemButton sx={{ borderRadius: 2 }}>
                   <ListItemIcon sx={{ 
-                    color: item.active ? 'white' : 'inherit'
+                    color: item.active ? 'white' : 'text.primary'
                   }}>
                     {item.icon}
                   </ListItemIcon>
@@ -255,9 +219,9 @@ const AdminLayout = () => {
                     }}
                   />
                   {settingsOpen ? (
-                    <ExpandLessIcon sx={{ color: item.active ? 'white' : 'inherit' }} />
+                    <ExpandLessIcon sx={{ color: item.active ? 'white' : 'text.primary' }} />
                   ) : (
-                    <ExpandMoreIcon sx={{ color: item.active ? 'white' : 'inherit' }} />
+                    <ExpandMoreIcon sx={{ color: item.active ? 'white' : 'text.primary' }} />
                   )}
                 </ListItemButton>
               </ListItem>
@@ -309,7 +273,7 @@ const AdminLayout = () => {
             >
               <ListItemButton sx={{ borderRadius: 2 }}>
                 <ListItemIcon sx={{ 
-                  color: item.active ? 'white' : 'inherit'
+                  color: item.active ? 'white' : 'text.primary'
                 }}>
                   {item.icon}
                 </ListItemIcon>
@@ -342,10 +306,10 @@ const AdminLayout = () => {
           }}
         >
           <ListItemButton sx={{ borderRadius: 2 }}>
-            <ListItemIcon>
+            <ListItemIcon sx={{ color: 'text.primary' }}>
               <HomeIcon />
             </ListItemIcon>
-            <ListItemText primary="Ir para o Site" />
+            <ListItemText primary="Ir para o Site" sx={{ color: 'text.primary' }} />
           </ListItemButton>
         </ListItem>
         
@@ -366,12 +330,25 @@ const AdminLayout = () => {
             <ListItemIcon sx={{ color: 'inherit' }}>
               <LogoutIcon />
             </ListItemIcon>
-            <ListItemText primary="Sair" />
+            <ListItemText primary="Sair" sx={{ color: 'inherit' }} />
           </ListItemButton>
         </ListItem>
       </List>
     </Box>
   );
+
+  if (!user) {
+    return (
+      <Box 
+        display="flex" 
+        justifyContent="center" 
+        alignItems="center" 
+        minHeight="100vh"
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ display: 'flex' }}>
@@ -407,7 +384,7 @@ const AdminLayout = () => {
                 sx={{ ml: 2 }}
               >
                 <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.dark' }}>
-                  {userData?.fullName?.charAt(0).toUpperCase() || 'U'}
+                  {userData?.fullName?.charAt(0)?.toUpperCase() || userData?.email?.charAt(0)?.toUpperCase() || 'U'}
                 </Avatar>
               </IconButton>
             </Tooltip>
