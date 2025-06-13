@@ -237,7 +237,6 @@ const AdminLayout = () => {
                   borderRadius: 2,
                   mb: 1,
                   bgcolor: item.active ? 'primary.main' : 'transparent',
-                  color: item.active ? 'white' : 'inherit',
                   '&:hover': {
                     bgcolor: item.active ? 'primary.dark' : 'action.hover',
                   },
@@ -249,8 +248,17 @@ const AdminLayout = () => {
                   }}>
                     {item.icon}
                   </ListItemIcon>
-                  <ListItemText primary={item.text} />
-                  {settingsOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                  <ListItemText 
+                    primary={item.text} 
+                    sx={{ 
+                      color: item.active ? 'white' : 'text.primary'
+                    }}
+                  />
+                  {settingsOpen ? (
+                    <ExpandLessIcon sx={{ color: item.active ? 'white' : 'inherit' }} />
+                  ) : (
+                    <ExpandMoreIcon sx={{ color: item.active ? 'white' : 'inherit' }} />
+                  )}
                 </ListItemButton>
               </ListItem>
               <Collapse in={settingsOpen} timeout="auto" unmountOnExit>
@@ -266,14 +274,18 @@ const AdminLayout = () => {
                         borderRadius: 2,
                         mb: 1,
                         bgcolor: subitem.active ? 'primary.light' : 'transparent',
-                        color: subitem.active ? 'white' : 'inherit',
                         '&:hover': {
                           bgcolor: subitem.active ? 'primary.main' : 'action.hover',
                         },
                       }}
                     >
                       <ListItemButton sx={{ borderRadius: 2 }}>
-                        <ListItemText primary={subitem.text} />
+                        <ListItemText 
+                          primary={subitem.text} 
+                          sx={{ 
+                            color: subitem.active ? 'white' : 'text.primary'
+                          }}
+                        />
                       </ListItemButton>
                     </ListItem>
                   ))}
@@ -290,7 +302,6 @@ const AdminLayout = () => {
                 borderRadius: 2,
                 mb: 1,
                 bgcolor: item.active ? 'primary.main' : 'transparent',
-                color: item.active ? 'white' : 'inherit',
                 '&:hover': {
                   bgcolor: item.active ? 'primary.dark' : 'action.hover',
                 },
@@ -302,7 +313,12 @@ const AdminLayout = () => {
                 }}>
                   {item.icon}
                 </ListItemIcon>
-                <ListItemText primary={item.text} />
+                <ListItemText 
+                  primary={item.text} 
+                  sx={{ 
+                    color: item.active ? 'white' : 'text.primary'
+                  }}
+                />
               </ListItemButton>
             </ListItem>
           )
