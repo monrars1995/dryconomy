@@ -37,7 +37,11 @@ const LoadingSpinner = ({
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            gap: 2
+            gap: 2,
+            backgroundColor: 'background.paper',
+            borderRadius: 2,
+            padding: 3,
+            boxShadow: 3
           }}
         >
           <CircularProgress 
