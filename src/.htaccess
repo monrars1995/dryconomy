@@ -1,0 +1,24 @@
+
+RewriteOptions inherit
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+  RewriteRule ^index\.html$ - [L]
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteCond %{REQUEST_FILENAME} !-l
+  RewriteRule . /index.html [L]
+</IfModule>
+
+# Forçar HTTPS
+RewriteEngine On
+RewriteCond %{HTTPS} off
+RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Headers de segurança
+<IfModule mod_headers.c>
+  Header set X-Content-Type-Options "nosniff"
+  Header set X-Frame-Options "DENY"
+  Header set X-XSS-Protection "1; mode=block"
+  Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+</IfModule>
