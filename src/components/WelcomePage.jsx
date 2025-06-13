@@ -19,28 +19,8 @@ import {
   ArrowForward as ArrowForwardIcon
 } from '@mui/icons-material';
 
-// Componente SVG personalizado para gota d'água
-const WaterDropSVG = ({ sx = {} }) => {
-  // Extrair valores primitivos do objeto sx
-  const width = typeof sx.fontSize === 'number' ? sx.fontSize : 32;
-  const height = typeof sx.fontSize === 'number' ? sx.fontSize : 32;
-  const color = sx.color || 'currentColor';
-  
-  // Remover propriedades que não devem ir para o style
-  const { fontSize, ...restStyles } = sx;
-  
-  return (
-    <svg 
-      width={width} 
-      height={height} 
-      viewBox="0 0 24 24" 
-      fill={color}
-      style={restStyles}
-    >
-      <path d="M12 2c-5.33 4.55-8 8.48-8 11.8 0 4.98 3.8 8.2 8 8.2s8-3.22 8-8.2c0-3.32-2.67-7.25-8-11.8z"/>
-    </svg>
-  );
-};
+// Importar o componente WaterDropSVG do arquivo WaterSavingsResults
+import { WaterDropSVG } from './WaterSavingsResults';
 
 const FeatureCard = ({ icon: Icon, title, description, darkMode }) => (
   <Card 

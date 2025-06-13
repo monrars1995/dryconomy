@@ -1,0 +1,198 @@
+/* Estilos de acessibilidade */
+
+/* Foco visível melhorado */
+*:focus {
+  outline: 2px solid #1976d2;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Remover outline padrão apenas quando não usando teclado */
+.js-focus-visible *:focus:not(.focus-visible) {
+  outline: none;
+}
+
+/* Estilos para alto contraste */
+.high-contrast {
+  filter: contrast(150%) brightness(120%);
+}
+
+.high-contrast * {
+  text-shadow: none !important;
+  box-shadow: none !important;
+}
+
+.high-contrast button,
+.high-contrast .MuiButton-root {
+  border: 2px solid currentColor !important;
+}
+
+/* Estilos para redução de movimento */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Melhor contraste para texto */
+.MuiTypography-root {
+  color: inherit;
+}
+
+/* Estilos para leitores de tela */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Indicadores de estado para elementos interativos */
+button:disabled,
+.MuiButton-root:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Melhor visibilidade para links */
+a {
+  text-decoration: underline;
+  color: #1976d2;
+}
+
+a:hover,
+a:focus {
+  text-decoration: none;
+  background-color: rgba(25, 118, 210, 0.1);
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+
+/* Estilos para campos de formulário */
+.MuiTextField-root .MuiOutlinedInput-root.Mui-error {
+  border-color: #d32f2f;
+}
+
+.MuiTextField-root .MuiOutlinedInput-root.Mui-focused {
+  border-width: 2px;
+}
+
+/* Indicadores visuais para elementos obrigatórios */
+.MuiTextField-root .MuiInputLabel-asterisk {
+  color: #d32f2f;
+}
+
+/* Melhor contraste para placeholders */
+.MuiOutlinedInput-input::placeholder {
+  opacity: 0.7;
+  color: inherit;
+}
+
+/* Estilos para modo escuro */
+@media (prefers-color-scheme: dark) {
+  .MuiPaper-root {
+    background-color: #1e1e1e;
+  }
+  
+  .MuiTypography-root {
+    color: #ffffff;
+  }
+}
+
+/* Estilos para impressão */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  * {
+    background: white !important;
+    color: black !important;
+    box-shadow: none !important;
+  }
+}
+
+/* Estilos para telas pequenas */
+@media (max-width: 600px) {
+  /* Aumentar área de toque para elementos interativos */
+  button,
+  .MuiButton-root,
+  .MuiIconButton-root {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Melhor espaçamento em telas pequenas */
+  .MuiTextField-root {
+    margin-bottom: 16px;
+  }
+}
+
+/* Animações suaves para transições */
+.fade-enter {
+  opacity: 0;
+}
+
+.fade-enter-active {
+  opacity: 1;
+  transition: opacity 300ms ease-in;
+}
+
+.fade-exit {
+  opacity: 1;
+}
+
+.fade-exit-active {
+  opacity: 0;
+  transition: opacity 300ms ease-out;
+}
+
+/* Estilos para indicadores de carregamento */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+/* Estilos para notificações */
+.MuiSnackbar-root {
+  z-index: 10000;
+}
+
+/* Melhor visibilidade para elementos de navegação */
+.navigation-button {
+  position: relative;
+}
+
+.navigation-button::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border: 2px solid transparent;
+  border-radius: inherit;
+  transition: border-color 0.2s ease;
+}
+
+.navigation-button:focus::after {
+  border-color: #1976d2;
+}

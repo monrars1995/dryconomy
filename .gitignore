@@ -1,3 +1,4 @@
 x// ...existing code...
 database.sqlite
 node_modules
+.env

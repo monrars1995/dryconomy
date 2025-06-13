@@ -1,83 +1,85 @@
 <?php
 
-// Placeholder for Supabase configuration
-// We will need to define how to connect to Supabase here.
-// This might involve using an API key and URL from environment variables 
-// (e.g., from the main .env file or directly set in the server environment).
+// Database configuration for MySQL connection
+// Update these values with your actual database credentials
 
-// It's recommended to use a PHP library for Supabase for easier interaction.
-// For example, using 'supabase-php': https://github.com/supabase-community/supabase-php
+// Database connection parameters
+define('DB_HOST', 'localhost');
+define('DB_NAME', 'dryconomy_db');
+define('DB_USER', 'root');
+define('DB_PASS', '');
+define('DB_PORT', 3306);
+define('DB_CHARSET', 'utf8mb4');
 
-// Example of how you might load Supabase credentials (adjust as needed):
-// if (file_exists(__DIR__ . '/../.env')) {
-//     // You would typically use a library like phpdotenv to load .env files
-//     // require_once __DIR__ . '/../vendor/autoload.php'; // If using Composer and phpdotenv
-//     // $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/../');
-//     // $dotenv->load();
-// }
+// PDO options for better error handling and security
+$pdo_options = [
+    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+    PDO::ATTR_EMULATE_PREPARES => false,
+    PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES " . DB_CHARSET
+];
 
-// // Attempt to get Supabase URL and Key from environment variables
-// // These VITE_ prefixed variables are common in frontend .env files with Vite.
-// // Ensure your backend environment has access to these, or use different variable names.
-// define('SUPABASE_URL', $_ENV['VITE_SUPABASE_URL'] ?? null);
-// define('SUPABASE_KEY', $_ENV['VITE_SUPABASE_ANON_KEY'] ?? null);
-
-// if (!SUPABASE_URL || !SUPABASE_KEY) {
-//     error_log('Supabase URL or Key not configured. Please check your .env file or server environment variables.');
-//     // In a real API, you might throw an exception or return an error response
-//     // die('Critical error: Supabase configuration missing.'); 
-// }
-
-/*
-// Example function to get a Supabase client instance
-// You'll need to install a Supabase PHP client library, e.g., via Composer:
-// composer require supabase/supabase-php
-
-// Ensure you have an autoloader if using Composer packages
-// require_once __DIR__ . '/../vendor/autoload.php';
-
-use Supabase\CreateClient;
-
-function get_supabase_client() {
-    static $supabase = null;
-    if ($supabase === null) {
-        if (!defined('SUPABASE_URL') || !defined('SUPABASE_KEY') || SUPABASE_URL === null || SUPABASE_KEY === null) {
-            error_log('Supabase client cannot be initialized: URL or Key is missing or null.');
-            return null; 
-        }
-        try {
-            // Note: Ensure the CreateClient class is available and autoloaded.
-            $supabase = new CreateClient(SUPABASE_URL, SUPABASE_KEY);
-        } catch (Exception $e) {
-            error_log('Error initializing Supabase client: ' . $e->getMessage());
-            return null;
-        }
-    }
-    return $supabase;
-}
-
-// Example function to test Supabase connection
-function test_supabase_connection() {
-    $client = get_supabase_client();
-    if (!$client) {
-        return 'Failed to initialize Supabase client. Check logs for details.';
-    }
+/**
+ * Get database connection
+ * @return PDO Database connection object
+ * @throws Exception If connection fails
+ */
+function getDbConnection() {
+    global $pdo_options;
+    
     try {
-        // Example: List users - requires appropriate RLS policies on Supabase
-        // This is just a placeholder query. Replace with a suitable test query for your setup.
-        // $response = $client->from('profiles')->select('*')->limit(1)->execute();
-        // if (isset($response->error)) {
-        //    return 'Supabase connection test failed: ' . $response->error->message;
-        // }
-        // return 'Supabase connection successful (client initialized). Query executed (example).';
-        return 'Supabase client initialized. A specific query is needed to fully test the connection.';
-    } catch (Exception $e) {
-        return 'Supabase connection test (query phase) failed: ' . $e->getMessage();
+        $dsn = "mysql:host=" . DB_HOST . ";port=" . DB_PORT . ";dbname=" . DB_NAME . ";charset=" . DB_CHARSET;
+        $pdo = new PDO($dsn, DB_USER, DB_PASS, $pdo_options);
+        return $pdo;
+    } catch (PDOException $e) {
+        error_log('Database connection failed: ' . $e->getMessage());
+        throw new Exception('Erro de conexão com o banco de dados: ' . $e->getMessage());
     }
 }
-*/
 
-// All old MySQL related code has been removed.
-// The API will now need to be updated to use Supabase for database operations.
+/**
+ * Test database connection
+ * @return array Connection test result
+ */
+function testDbConnection() {
+    try {
+        $pdo = getDbConnection();
+        
+        // Test with a simple query
+        $stmt = $pdo->query("SELECT 1 as test");
+        $result = $stmt->fetch();
+        
+        if ($result && $result['test'] == 1) {
+            return [
+                'success' => true,
+                'message' => 'Conexão com o banco de dados estabelecida com sucesso.',
+                'host' => DB_HOST,
+                'database' => DB_NAME,
+                'port' => DB_PORT
+            ];
+        } else {
+            return [
+                'success' => false,
+                'message' => 'Falha no teste de consulta ao banco de dados.'
+            ];
+        }
+    } catch (Exception $e) {
+        return [
+            'success' => false,
+            'message' => 'Erro ao testar conexão: ' . $e->getMessage()
+        ];
+    }
+}
+
+/**
+ * Initialize database connection for legacy scripts
+ * This maintains compatibility with older code that expects a global $pdo variable
+ */
+try {
+    $pdo = getDbConnection();
+} catch (Exception $e) {
+    error_log('Failed to initialize database connection: ' . $e->getMessage());
+    $pdo = null;
+}
 
 ?>
