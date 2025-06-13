@@ -16,6 +16,7 @@ import SimulationParametersForm from './components/SimulationParametersForm';
 import CitySelectionForm from './components/CitySelectionForm';
 import WaterSavingsResults from './components/WaterSavingsResults';
 import PrivacyBanner from './components/PrivacyBanner';
+import BudgetRequestModal from './components/BudgetRequestModal';
 
 // Componentes de UI/UX melhorados
 import ErrorBoundary from './components/ErrorBoundary';
@@ -111,6 +112,9 @@ const App = () => {
 
   const [citiesData, setCitiesData] = useState([]);
   const [selectedCity, setSelectedCity] = useState(null);
+
+  // Estados para o modal de orçamento
+  const [budgetModalOpen, setBudgetModalOpen] = useState(false);
 
   // Configurações de tema melhoradas
   const theme = createTheme({
@@ -406,6 +410,11 @@ const App = () => {
   };
 
   const handleFinishSimulation = async () => {
+    // Abrir modal de orçamento em vez de salvar diretamente
+    setBudgetModalOpen(true);
+  };
+
+  const handleBudgetRequest = async (budgetData) => {
     try {
       setIsLoading(true);
       
@@ -424,18 +433,16 @@ const App = () => {
             yearlyDifferencePercentage: results.comparison.yearlyDifferencePercentage
           }
         },
+        budgetRequest: {
+          wantsBudget: budgetData.wantsBudget,
+          additionalInfo: budgetData.additionalInfo
+        },
         timestamp: new Date().toISOString(),
         location: inputs.location,
         capacity: inputs.capacity
       };
 
       await saveSimulation(simulationData);
-      
-      setNotification({
-        open: true,
-        message: 'Simulação salva com sucesso! Em breve entraremos em contato.',
-        severity: 'success'
-      });
       
       // Marcar última etapa como completa
       setCompletedSteps(prev => [...prev, activeStep]);
@@ -449,6 +456,7 @@ const App = () => {
       });
     } finally {
       setIsLoading(false);
+      setBudgetModalOpen(false);
     }
   };
 
@@ -645,6 +653,18 @@ const App = () => {
           </Paper>
 
           <PrivacyBanner />
+
+          {/* Modal de Orçamento */}
+          <BudgetRequestModal
+            open={budgetModalOpen}
+            onClose={() => setBudgetModalOpen(false)}
+            userData={userData}
+            simulationResults={{
+              inputs,
+              comparison: results.comparison
+            }}
+            onSubmit={handleBudgetRequest}
+          />
 
           <Snackbar
             open={notification.open}
