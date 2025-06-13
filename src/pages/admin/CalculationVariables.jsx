@@ -673,3 +673,5 @@ const CalculationVariables = () => {
 };
 
 export default CalculationVariables;
+
+export { CalculationVariables }

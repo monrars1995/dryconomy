@@ -733,3 +733,5 @@ const Leads = () => {
 };
 
 export default Leads;
+
+export { Leads }
