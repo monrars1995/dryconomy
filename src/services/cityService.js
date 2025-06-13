@@ -18,7 +18,7 @@ export const fetchCities = async (page = 0, pageSize = 10, searchTerm = '') => {
 
     // Aplicar filtro de busca se fornecido
     if (searchTerm) {
-      query = query.ilike('name', `%${searchTerm}%`);
+      query = query.or(`name.ilike.%${searchTerm}%,state.ilike.%${searchTerm}%`);
     }
 
     // Ordenar por nome da cidade
@@ -118,5 +118,25 @@ export const deleteCity = async (cityId) => {
   } catch (error) {
     console.error('Erro ao remover cidade:', error);
     return { error };
+  }
+};
+
+/**
+ * Busca todas as cidades disponíveis
+ * @returns {Promise<Array>} Lista de cidades
+ */
+export const getAllCities = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('cities')
+      .select('*')
+      .order('name');
+      
+    if (error) throw error;
+    
+    return data || [];
+  } catch (error) {
+    console.error('Erro ao buscar todas as cidades:', error);
+    return [];
   }
 };

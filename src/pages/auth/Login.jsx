@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { 
   Box, 
   Button, 
@@ -11,27 +11,39 @@ import {
   Avatar, 
   CircularProgress,
   Alert,
-  Link as MuiLink
+  Link as MuiLink,
+  InputAdornment,
+  IconButton,
+  useTheme
 } from '@mui/material';
-import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
+import {
+  LockOutlined as LockOutlinedIcon,
+  Visibility as VisibilityIcon,
+  VisibilityOff as VisibilityOffIcon
+} from '@mui/icons-material';
 import { useAuth } from '../../hooks/useAuth';
 
 const Login = () => {
+  const theme = useTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const { signIn, user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Obter o caminho de redirecionamento da URL, se houver
+  const from = location.state?.from || '/admin';
   
   // Efeito para redirecionar se o usuário já estiver autenticado
-  React.useEffect(() => {
+  useEffect(() => {
     if (isAuthenticated && user) {
       console.log('Login.jsx: Usuário autenticado, redirecionando...', { user });
-      // Redirecionar para a página admin independentemente da role
-      navigate('/admin');
+      navigate(from);
     }
-  }, [isAuthenticated, user, navigate]);
+  }, [isAuthenticated, user, navigate, from]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -63,6 +75,10 @@ const Login = () => {
     }
   };
 
+  const handleTogglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
+
   // Se o usuário já estiver autenticado, não renderize o formulário de login
   if (isAuthenticated) {
     return (
@@ -73,90 +89,141 @@ const Login = () => {
   }
 
   return (
-    <Container component="main" maxWidth="xs">
-      <CssBaseline />
-      <Box
-        sx={{
-          marginTop: 8,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-        }}
-      >
-        <Avatar sx={{ m: 1, bgcolor: 'primary.main' }}>
-          <LockOutlinedIcon />
-        </Avatar>
-        <Typography component="h1" variant="h5">
-          Acesso Administrativo
-        </Typography>
-        
-        <Paper elevation={3} sx={{ p: 4, mt: 3, width: '100%' }}>
+    <Box
+      sx={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'linear-gradient(135deg, #00337A 0%, #1976d2 100%)',
+        py: 4
+      }}
+    >
+      <Container maxWidth="sm">
+        <Paper
+          elevation={6}
+          sx={{
+            p: { xs: 3, sm: 5 },
+            borderRadius: 3,
+            background: 'white',
+          }}
+        >
+          <Box sx={{ textAlign: 'center', mb: 4 }}>
+            <img 
+              src="/images/drylogo.png" 
+              alt="Dryconomy Logo" 
+              style={{ height: '60px', marginBottom: '16px' }} 
+            />
+            <Typography variant="h5" component="h1" gutterBottom sx={{ fontWeight: 700, color: '#00337A' }}>
+              Acesso Administrativo
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Entre com suas credenciais para acessar o painel administrativo
+            </Typography>
+          </Box>
+
           {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
+            <Alert severity="error" sx={{ mb: 3 }}>
               {error}
             </Alert>
           )}
-          
-          <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
+
+          <form onSubmit={handleSubmit}>
             <TextField
-              margin="normal"
-              required
+              label="Email"
+              type="email"
               fullWidth
-              id="email"
-              label="E-mail"
-              name="email"
-              autoComplete="email"
-              autoFocus
+              margin="normal"
+              variant="outlined"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              disabled={loading}
-            />
-            <TextField
-              margin="normal"
               required
-              fullWidth
-              name="password"
+              autoFocus
+              sx={{ 
+                mb: 2,
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 2
+                }
+              }}
+            />
+
+            <TextField
               label="Senha"
-              type="password"
-              id="password"
-              autoComplete="current-password"
+              type={showPassword ? 'text' : 'password'}
+              fullWidth
+              margin="normal"
+              variant="outlined"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              disabled={loading}
+              required
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      aria-label="toggle password visibility"
+                      onClick={handleTogglePasswordVisibility}
+                      edge="end"
+                    >
+                      {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+              sx={{ 
+                mb: 3,
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 2
+                }
+              }}
             />
+
             <Button
               type="submit"
               fullWidth
               variant="contained"
-              sx={{ mt: 3, mb: 2 }}
+              size="large"
               disabled={loading}
+              sx={{ 
+                mt: 2, 
+                mb: 3, 
+                py: 1.5, 
+                borderRadius: 2,
+                background: 'linear-gradient(45deg, #00337A 30%, #1976d2 90%)',
+                boxShadow: '0 4px 20px rgba(0, 51, 122, 0.3)',
+                '&:hover': {
+                  boxShadow: '0 6px 25px rgba(0, 51, 122, 0.4)'
+                }
+              }}
             >
-              {loading ? (
-                <CircularProgress size={24} color="inherit" />
-              ) : (
-                'Entrar'
-              )}
+              {loading ? <CircularProgress size={24} /> : 'Entrar'}
             </Button>
+            
             <Box sx={{ textAlign: 'center', mt: 2 }}>
               <MuiLink 
                 component={Link} 
                 to="/forgot-password" 
                 variant="body2"
-                sx={{ textDecoration: 'none' }}
+                sx={{ 
+                  textDecoration: 'none',
+                  color: theme.palette.primary.main,
+                  '&:hover': {
+                    textDecoration: 'underline'
+                  }
+                }}
               >
                 Esqueceu sua senha?
               </MuiLink>
             </Box>
-          </Box>
+          </form>
         </Paper>
         
         <Box sx={{ mt: 3, textAlign: 'center' }}>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" color="white">
             {new Date().getFullYear()} Dryconomy. Todos os direitos reservados.
           </Typography>
         </Box>
-      </Box>
-    </Container>
+      </Container>
+    </Box>
   );
 };
 
