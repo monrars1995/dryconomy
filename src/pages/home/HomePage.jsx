@@ -21,7 +21,13 @@ const HomePage = () => {
   const navigate = useNavigate();
 
   const handleStartSimulation = () => {
-    navigate('/simulador');
+    console.log('Start Simulation button clicked');
+    try {
+      console.log('Attempting to navigate to /simulador');
+      navigate('/simulador');
+    } catch (error) {
+      console.error('Error during navigation:', error);
+    }
   };
 
   const features = [

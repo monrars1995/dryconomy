@@ -1,5 +1,6 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { useEffect } from 'react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { AuthProvider } from './hooks/useAuth';
@@ -79,12 +80,24 @@ const theme = createTheme({
   },
 });
 
+// Componente para logar mudanças de rota
+const RouteLogger = () => {
+  const location = useLocation();
+  
+  useEffect(() => {
+    console.log('Route changed to:', location.pathname);
+  }, [location]);
+  
+  return null;
+};
+
 const AppRoutes = () => {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <AuthProvider>
         <Router>
+          <RouteLogger />
           <Routes>
             {/* Rotas Públicas */}
             <Route path="/" element={<HomePage />} />

@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
-  Box, Typography, Card, CardContent, Grid, TextField,
-  InputAdornment, Fade, Alert, List, ListItem, ListItemText,
-  ListItemIcon, Chip, Avatar, Autocomplete
+  Box, Typography, Card, CardContent, TextField,
+  InputAdornment, Fade, Alert, Autocomplete, Avatar, Grid,
+  Chip, List, ListItem, ListItemButton, ListItemIcon, ListItemText
 } from '@mui/material';
 import {
   LocationOn as LocationIcon,
@@ -12,17 +12,50 @@ import {
   Public as PublicIcon
 } from '@mui/icons-material';
 
-const CitySelectionForm = ({ cities, selectedCity, onChange, darkMode }) => {
-  const [searchTerm, setSearchTerm] = useState('');
+const CitySelectionForm = ({ cities = [], selectedCity, onSelectCity, darkMode }) => {
+  const [inputValue, setInputValue] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const [error, setError] = useState(null);
+  
+  // Filter cities based on input value
+  const filteredCities = React.useMemo(() => {
+    if (!inputValue) return cities;
+    const search = inputValue.toLowerCase();
+    return cities.filter(city => 
+      city.name.toLowerCase().includes(search) ||
+      (city.state && city.state.toLowerCase().includes(search))
+    );
+  }, [inputValue, cities]);
 
-  const handleCitySelect = (city) => {
-    onChange(city);
-  };
+  // Handle city selection
+  const handleCitySelect = React.useCallback((event, newValue) => {
+    console.log('Selected city:', newValue);
+    // Armazenar a cidade selecionada na propriedade selectedCity (objeto completo)
+    // e passar apenas o nome da cidade (string) para o input de location
+    if (newValue) {
+      const cityName = newValue.state ? `${newValue.name}, ${newValue.state}` : newValue.name;
+      onSelectCity({
+        city: newValue, // Objeto cidade completo para uso no componente
+        locationName: cityName // Nome da cidade formatado para armazenar em inputs.location
+      });
+    } else {
+      onSelectCity(null);
+    }
+  }, [onSelectCity]);
 
-  const filteredCities = cities.filter(city =>
-    city.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (city.state && city.state.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  // Handle input change with debounce
+  const handleInputChange = React.useCallback((event, newInputValue) => {
+    setInputValue(newInputValue);
+    setIsTyping(!!newInputValue);
+  }, []);
+
+  const handleError = React.useCallback((error) => {
+    console.error('Error:', error);
+    // Use setTimeout to avoid setState during render
+    setTimeout(() => {
+      setError(error.message || 'Ocorreu um erro ao processar sua solicitação');
+    }, 0);
+  }, []);
 
   const getCityInfo = (city) => {
     if (!city) return null;
@@ -76,22 +109,84 @@ const CitySelectionForm = ({ cities, selectedCity, onChange, darkMode }) => {
             {/* Campo de busca */}
             <Box sx={{ mb: 3 }}>
               <Autocomplete
+                id="city-selector"
                 options={cities}
-                getOptionLabel={(option) => `${option.name}${option.state ? `, ${option.state}` : ''}`}
-                value={selectedCity}
-                onChange={(event, newValue) => {
-                  if (newValue) {
-                    handleCitySelect(newValue);
-                  }
+                getOptionLabel={(option) => {
+                  if (!option) return '';
+                  return option.state ? `${option.name}, ${option.state}` : option.name || '';
                 }}
-                onInputChange={(event, newInputValue) => {
-                  setSearchTerm(newInputValue);
+                inputValue={inputValue}
+                onInputChange={handleInputChange}
+                value={selectedCity || null}
+                isOptionEqualToValue={(option, value) => {
+                  if (!option || !value) return option === value;
+                  
+                  // Se value for uma string (como "Belo Horizonte, MG")
+                  if (typeof value === 'string') {
+                    const optionLabel = option.state ? `${option.name}, ${option.state}` : option.name;
+                    return optionLabel === value;
+                  }
+                  
+                  // Se value for um objeto
+                  return option.id === value.id || option.name === value.name;
+                }}
+                onChange={handleCitySelect}
+                filterOptions={(options, { inputValue: filterValue }) => {
+                  if (!filterValue) return options;
+                  const search = filterValue.toLowerCase();
+                  return options.filter(option => 
+                    option.name.toLowerCase().includes(search) ||
+                    (option.state && option.state.toLowerCase().includes(search))
+                  );
+                }}
+                noOptionsText="Nenhuma cidade encontrada"
+                sx={{
+                  width: '100%',
+                  '& .MuiAutocomplete-listbox': {
+                    backgroundColor: darkMode ? '#2d2d2d' : '#fff',
+                    color: darkMode ? '#fff' : '#000',
+                    '& .MuiAutocomplete-option': {
+                      color: darkMode ? '#fff' : '#000',
+                      '&:hover': {
+                        backgroundColor: darkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.04)',
+                      },
+                      '&[data-focus="true"]': {
+                        backgroundColor: darkMode ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.06)',
+                      },
+                    },
+                  },
+                  '& .MuiInputLabel-root': {
+                    color: darkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
+                  },
+                  '& .MuiOutlinedInput-root': {
+                    '& fieldset': {
+                      borderColor: darkMode ? 'rgba(255, 255, 255, 0.23)' : 'rgba(0, 0, 0, 0.23)',
+                    },
+                    '&:hover fieldset': {
+                      borderColor: darkMode ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.5)',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: darkMode ? '#90caf9' : '#1976d2',
+                    },
+                  },
+                  '& .MuiAutocomplete-paper': {
+                    backgroundColor: darkMode ? '#2d2d2d' : '#fff',
+                    color: darkMode ? '#fff' : '#000',
+                    '& .MuiAutocomplete-option': {
+                      color: darkMode ? '#fff' : '#000',
+                    },
+                  },
+                  '& .MuiInputBase-input': {
+                    color: darkMode ? '#fff' : '#000',
+                  },
                 }}
                 renderInput={(params) => (
                   <TextField
                     {...params}
                     label="Buscar cidade"
                     placeholder="Digite o nome da sua cidade..."
+                    error={!selectedCity && inputValue.length > 0 && filteredCities.length === 0}
+                    helperText={!selectedCity && inputValue.length > 0 && filteredCities.length === 0 ? "Selecione uma cidade da lista" : ""}
                     InputProps={{
                       ...params.InputProps,
                       startAdornment: (
@@ -101,6 +196,9 @@ const CitySelectionForm = ({ cities, selectedCity, onChange, darkMode }) => {
                       ),
                     }}
                     sx={{
+                      '& .MuiFormHelperText-root': {
+                        color: darkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
+                      },
                       '& .MuiOutlinedInput-root': {
                         borderRadius: 2,
                         transition: 'all 0.3s ease',
@@ -128,7 +226,6 @@ const CitySelectionForm = ({ cities, selectedCity, onChange, darkMode }) => {
                     </Box>
                   );
                 }}
-                noOptionsText="Nenhuma cidade encontrada"
                 loadingText="Carregando cidades..."
               />
             </Box>
@@ -233,8 +330,8 @@ const CitySelectionForm = ({ cities, selectedCity, onChange, darkMode }) => {
               </Card>
             )}
 
-            {/* Lista de cidades populares se nenhuma estiver selecionada */}
-            {!selectedCity && filteredCities.length > 0 && (
+            {/* Lista de cidades disponíveis */}
+            {!selectedCity && inputValue && filteredCities.length > 0 && (
               <Box sx={{ mt: 3 }}>
                 <Typography variant="h6" gutterBottom sx={{ 
                   color: 'primary.main',
@@ -281,9 +378,9 @@ const CitySelectionForm = ({ cities, selectedCity, onChange, darkMode }) => {
               </Box>
             )}
 
-            {filteredCities.length === 0 && searchTerm && (
+            {filteredCities.length === 0 && inputValue && (
               <Alert severity="info" sx={{ mt: 2 }}>
-                Nenhuma cidade encontrada para "{searchTerm}". Tente buscar por uma cidade diferente.
+                Nenhuma cidade encontrada para "{inputValue}". Tente buscar por uma cidade diferente.
               </Alert>
             )}
           </CardContent>

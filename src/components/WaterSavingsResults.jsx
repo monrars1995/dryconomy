@@ -1,11 +1,24 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Box, 
   Typography, 
   useTheme, 
   useMediaQuery, 
-  CircularProgress 
+  CircularProgress,
+  Paper,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  Divider
 } from '@mui/material';
+import { 
+  CheckCircle as CheckCircleIcon,
+  WaterDrop as WaterDropIcon,
+  LocalFireDepartment as EnergyIcon,
+  Park as Co2Icon,
+  AttachMoney as MoneyIcon
+} from '@mui/icons-material';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 // Importar o componente WaterDropSVG do arquivo dedicado
@@ -13,40 +26,40 @@ import WaterDropSVG from './WaterDropSVG';
 
 // Funções auxiliares para tratamento seguro de valores
 const safeNumber = (value, defaultValue = 0) => {
-  const num = Number(value);
-  return isNaN(num) || !isFinite(num) ? defaultValue : num;
+  const num = parseFloat(value);
+  return isNaN(num) ? defaultValue : num;
 };
 
 const safeFormatNumber = (value) => {
-  const num = safeNumber(value, 0);
-  return new Intl.NumberFormat('pt-BR', { 
+  return new Intl.NumberFormat('pt-BR', {
     minimumFractionDigits: 2,
-    maximumFractionDigits: 2 
-  }).format(num);
+    maximumFractionDigits: 2
+  }).format(safeNumber(value));
 };
 
 const safeFormatValue = (value) => {
-  const safeValue = safeNumber(value, 0);
-  const millions = safeValue / 1000000;
-  
-  return millions >= 1 
-    ? `${safeNumber(millions, 0).toFixed(2)} milhões` 
-    : new Intl.NumberFormat('pt-BR').format(safeNumber(safeValue, 0).toFixed(1));
+  const num = safeNumber(value);
+  if (num >= 1000) {
+    return (num / 1000).toFixed(1) + 'k';
+  }
+  return num.toFixed(2);
 };
 
 const formatPercentage = (value) => {
-  const num = safeNumber(value, 0);
+  const num = safeNumber(value);
   return `${num.toFixed(2)}%`;
 };
 
-const WaterSavingsResults = ({ results = {}, darkMode = false, isLoading = false }) => {
+const WaterSavingsResults = ({ results = null, darkMode = false, isLoading = false }) => {
   console.log('Rendering WaterSavingsResults with results:', results);
   const theme = useTheme();
   const isXs = useMediaQuery('(max-width:600px)');
+  const [error, setError] = useState(null);
   
-  // Check if results are empty or loading
-  const isEmpty = Object.keys(results).length === 0;
+  // Check if results are empty, null, or undefined
+  const hasNoResults = !results || (typeof results === 'object' && Object.keys(results).length === 0);
   
+  // Handle loading state
   if (isLoading) {
     return (
       <Box sx={{ 
@@ -63,47 +76,69 @@ const WaterSavingsResults = ({ results = {}, darkMode = false, isLoading = false
     );
   }
   
-  if (isEmpty) {
+  // Handle error state
+  if (error) {
+    return (
+      <Box sx={{ 
+        p: 3, 
+        borderRadius: 2, 
+        bgcolor: 'error.light',
+        color: 'error.contrastText',
+        textAlign: 'center',
+        my: 3
+      }}>
+        <Typography variant="h6" gutterBottom>
+          Ocorreu um erro ao carregar os resultados
+        </Typography>
+        <Typography variant="body2" paragraph>
+          Por favor, tente novamente ou entre em contato com o suporte.
+        </Typography>
+        {process.env.NODE_ENV === 'development' && (
+          <Typography variant="caption" component="div" sx={{ mt: 2, fontFamily: 'monospace' }}>
+            {error.message}
+          </Typography>
+        )}
+      </Box>
+    );
+  }
+  
+  // Handle no results state
+  if (hasNoResults) {
     return (
       <Box sx={{ 
         p: 4, 
         textAlign: 'center',
-        bgcolor: darkMode ? 'background.paper' : 'grey.50',
-        borderRadius: 2,
-        boxShadow: 1,
-        maxWidth: 800,
-        mx: 'auto',
-        my: 4
+        color: darkMode ? 'text.secondary' : 'text.primary'
       }}>
-        <WaterDropSVG sx={{ fontSize: 60, color: 'primary.main', mb: 2 }} />
         <Typography variant="h6" gutterBottom>
           Nenhum resultado disponível
         </Typography>
-        <Typography variant="body1" color="text.secondary">
-          Realize uma simulação para visualizar os resultados de economia de água.
+        <Typography variant="body1">
+          Preencha o formulário para ver os resultados da simulação.
         </Typography>
       </Box>
     );
   }
   
+
   try {
     const isSm = useMediaQuery('(max-width:960px)');
     const isMd = useMediaQuery('(max-width:1280px)');
     
     // Ensure results has the expected structure with safe defaults
-    const safeResults = {
-      comparison: {
-        yearlyDifference: 0,
-        yearlyDifferencePercentage: 0,
-        ...(results.comparison || {})
-      },
-      ...results
-    };
-
+    const safeResults = results || {};
+    const comparisonData = safeResults.comparison || {};
+    
+    // Destructure with safe defaults
     const { 
-      yearlyDifference = 0, 
-      yearlyDifferencePercentage = 0 
-    } = safeResults.comparison || {};
+      yearly_difference: yearlyDifference = 0,
+      yearly_difference_percentage: yearlyDifferencePercentage = 0,
+      monthly_savings: monthlySavings = 0,
+      yearly_savings: yearlySavings = 0,
+      co2_savings: co2Savings = 0,
+      energy_savings: energySavings = 0,
+      water_savings: waterSavings = 0
+    } = comparisonData;
 
     // Safe values
     const safeYearlyDifference = safeNumber(yearlyDifference, 0);
@@ -182,9 +217,9 @@ const WaterSavingsResults = ({ results = {}, darkMode = false, isLoading = false
         </Box>
       </Box>
     );
-  } catch (error) {
-    console.error('Error in WaterSavingsResults:', error);
-    
+  } catch (err) {
+    console.error('Error in WaterSavingsResults:', err);
+    // In a real app, you might want to log this to an error tracking service
     return (
       <Box sx={{ 
         p: 3, 
@@ -195,14 +230,14 @@ const WaterSavingsResults = ({ results = {}, darkMode = false, isLoading = false
         my: 3
       }}>
         <Typography variant="h6" gutterBottom>
-          Ocorreu um erro ao carregar os resultados
+          Erro ao processar os resultados
         </Typography>
         <Typography variant="body2">
-          Por favor, tente novamente ou entre em contato com o suporte.
+          Ocorreu um erro ao processar os resultados da simulação. Por favor, tente novamente.
         </Typography>
         {process.env.NODE_ENV === 'development' && (
           <Typography variant="caption" component="div" sx={{ mt: 2, fontFamily: 'monospace' }}>
-            {error.message}
+            {err.message}
           </Typography>
         )}
       </Box>

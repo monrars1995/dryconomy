@@ -5,10 +5,6 @@ import path from 'path'
 export default defineConfig({
   base: '/',
   plugins: [react()],
-  server: {
-    port: 3000,
-    open: true
-  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src')
@@ -30,10 +26,10 @@ export default defineConfig({
       }
     }
   },
-  publicDir: 'public', // Atualizado: apontando para a pasta public na raiz
+  publicDir: 'public',
   server: {
-    port: 9001,
-    strictPort: false,
+    port: 9003,
+    strictPort: true,
     headers: {
       'Access-Control-Allow-Origin': '*',
       'X-Content-Type-Options': 'nosniff',
@@ -41,10 +37,11 @@ export default defineConfig({
       'X-XSS-Protection': '1; mode=block'
     },
     proxy: {
-      '/api': {
-        target: 'http://localhost',
+      '/functions/v1': {
+        target: 'https://okxieabjwqqrvpbkhpzz.supabase.co',
         changeOrigin: true,
-        secure: false
+        secure: true,
+        rewrite: (path) => path.replace(/^\/functions\/v1/, '')
       }
     }
   }

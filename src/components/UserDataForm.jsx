@@ -11,7 +11,7 @@ import {
   LocationOn as LocationIcon
 } from '@mui/icons-material';
 
-const UserDataForm = forwardRef(({ userData, onChange, darkMode }, ref) => {
+const UserDataForm = forwardRef(({ userData = {}, onChange, darkMode }, ref) => {
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
 
@@ -65,10 +65,13 @@ const UserDataForm = forwardRef(({ userData, onChange, darkMode }, ref) => {
   };
 
   const isFormValid = () => {
+    if (!userData) return false;
+    
     const requiredFields = ['name', 'email'];
-    return requiredFields.every(field => 
-      userData[field]?.trim() && !errors[field]
-    );
+    return requiredFields.every(field => {
+      const value = userData[field];
+      return value && typeof value === 'string' && value.trim() !== '' && !errors[field];
+    });
   };
 
   return (

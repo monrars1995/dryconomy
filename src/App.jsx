@@ -32,15 +32,67 @@ import SkipToContent from './components/SkipToContent';
 import ImprovedStepper from './components/ImprovedStepper';
 import ResponsiveNavigation from './components/ResponsiveNavigation';
 
+// Componente de limite de erro personalizado
+const AppErrorBoundary = ({ children }) => {
+  const [hasError, setHasError] = React.useState(false);
+  const [error, setError] = React.useState(null);
+
+  React.useEffect(() => {
+    const errorHandler = (errorEvent) => {
+      setHasError(true);
+      setError(errorEvent.error);
+      console.error('Uncaught error:', errorEvent.error);
+    };
+
+    window.addEventListener('error', errorHandler);
+    return () => window.removeEventListener('error', errorHandler);
+  }, []);
+
+  if (hasError) {
+    return (
+      <Box sx={{ p: 4, textAlign: 'center' }}>
+        <Typography variant="h5" color="error" gutterBottom>
+          Ocorreu um erro inesperado
+        </Typography>
+        <Typography variant="body1" paragraph>
+          Por favor, recarregue a página e tente novamente.
+        </Typography>
+        <Button 
+          variant="contained" 
+          color="primary" 
+          onClick={() => window.location.reload()}
+        >
+          Recarregar Página
+        </Button>
+        {error && (
+          <Box sx={{ mt: 2, p: 2, bgcolor: '#f5f5f5', borderRadius: 1, textAlign: 'left' }}>
+            <Typography variant="caption" color="textSecondary">
+              Detalhes do erro: {error.message}
+            </Typography>
+          </Box>
+        )}
+      </Box>
+    );
+  }
+
+  return children;
+};
+
 // Componente principal do Simulador
 const App = () => {
+  console.log('App component mounting...');
   const navigate = useNavigate();
   
   // Estados principais
   const [activeStep, setActiveStep] = useState(0);
   const [darkMode, setDarkMode] = useState(() => {
-    const saved = localStorage.getItem('darkMode');
-    return saved ? JSON.parse(saved) : false;
+    try {
+      const saved = localStorage.getItem('darkMode');
+      return saved ? JSON.parse(saved) : false;
+    } catch (error) {
+      console.error('Error reading darkMode from localStorage:', error);
+      return false;
+    }
   });
   
   // Estados para controle de UI
@@ -89,32 +141,42 @@ const App = () => {
         default: darkMode ? '#121212' : '#f5f5f5',
         paper: darkMode ? '#1E1E1E' : '#ffffff',
       },
+      text: {
+        primary: darkMode ? '#ffffff' : '#333333',
+        secondary: darkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.7)',
+      },
     },
     typography: {
       fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
       h1: {
         fontSize: '2.5rem',
         fontWeight: 500,
+        color: darkMode ? '#ffffff' : '#333333',
       },
       h2: {
         fontSize: '2rem',
         fontWeight: 500,
+        color: darkMode ? '#ffffff' : '#333333',
       },
       h3: {
         fontSize: '1.75rem',
         fontWeight: 500,
+        color: darkMode ? '#ffffff' : '#333333',
       },
       h4: {
         fontSize: '1.5rem',
         fontWeight: 500,
+        color: darkMode ? '#ffffff' : '#333333',
       },
       h5: {
         fontSize: '1.25rem',
         fontWeight: 500,
+        color: darkMode ? '#ffffff' : '#333333',
       },
       h6: {
         fontSize: '1rem',
         fontWeight: 500,
+        color: darkMode ? '#ffffff' : '#333333',
       },
     },
     components: {
@@ -163,6 +225,27 @@ const App = () => {
           fullWidth: true,
           margin: 'normal',
         },
+        styleOverrides: {
+          root: {
+            '& .MuiInputBase-input': {
+              color: darkMode ? '#ffffff' : '#000000', // Garantindo contraste adequado
+            },
+            '& .MuiOutlinedInput-root': {
+              '& fieldset': {
+                borderColor: darkMode ? 'rgba(255, 255, 255, 0.23)' : 'rgba(0, 0, 0, 0.23)',
+              },
+              '&:hover fieldset': {
+                borderColor: darkMode ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.5)',
+              },
+              '&.Mui-focused fieldset': {
+                borderColor: '#1976d2',
+              },
+            },
+            '& .MuiInputLabel-root': {
+              color: darkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
+            },
+          },
+        },
       },
       MuiFormControl: {
         defaultProps: {
@@ -174,6 +257,19 @@ const App = () => {
         styleOverrides: {
           root: {
             backgroundImage: 'none',
+          },
+        },
+      },
+      MuiTypography: {
+        styleOverrides: {
+          root: {
+            color: darkMode ? '#ffffff' : '#333333',
+            '&.MuiTypography-h3': {
+              color: darkMode ? '#ffffff' : '#333333', // Força a cor específica para h3
+            },
+          },
+          colorTextSecondary: {
+            color: darkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.7)',
           },
         },
       },
@@ -204,11 +300,17 @@ const App = () => {
         setIsLoading(true);
         
         // Carregar cidades usando o serviço de API
-        const { data: citiesData } = await getCities();
-        setCities(citiesData);
-        
-        // Carregar dados adicionais se necessário
-        // ...
+        const response = await getCities();
+        if (response && response.data) {
+          // Garantir que cada cidade tenha um ID único
+          const citiesWithIds = response.data.map((city, index) => ({
+            ...city,
+            id: city.id || `city-${index}` // Usar ID existente ou gerar um
+          }));
+          setCities(citiesWithIds);
+        } else {
+          throw new Error('Dados de cidades não encontrados');
+        }
         
         setInitialDataLoaded(true);
       } catch (error) {
@@ -233,14 +335,55 @@ const App = () => {
       
       try {
         setIsLoading(true);
-        const response = await fetch(`/api/cities/${encodeURIComponent(inputs.location)}`);
-        if (!response.ok) throw new Error('Falha ao carregar dados da cidade');
-        const cityData = await response.json();
+        
+        // Usar o serviço getCities em vez de fetch direto
+        const { data: allCities } = await getCities();
+        
+        // Verificar se inputs.location é um objeto ou string
+        let cityData;
+        if (typeof inputs.location === 'object' && inputs.location !== null) {
+          // Se for um objeto, usamos diretamente (provavelmente já é um objeto de cidade)
+          console.log('inputs.location é um objeto:', inputs.location);
+          
+          // Se tiver uma propriedade city, usá-la (compatível com a nova estrutura do CitySelectionForm)
+          if (inputs.location.city) {
+            cityData = inputs.location.city;
+          } else {
+            // Caso contrário, assumir que o próprio objeto é a cidade
+            cityData = inputs.location;
+          }
+          
+          // Atualizar inputs.location para ser apenas o nome da cidade (para futuras chamadas)
+          const cityName = cityData.state ? `${cityData.name}, ${cityData.state}` : cityData.name;
+          setInputs(prev => ({
+            ...prev,
+            location: cityName
+          }));
+        } else {
+          // Se for uma string, buscar a cidade correspondente
+          const locationStr = String(inputs.location || '').toLowerCase();
+          cityData = allCities.find(city => {
+            const cityNameLower = city.name.toLowerCase();
+            const cityWithStateLower = (city.name + ", " + city.state).toLowerCase();
+            return cityNameLower === locationStr || cityWithStateLower === locationStr;
+          });
+          
+          if (!cityData) throw new Error(`Cidade '${inputs.location}' não encontrada`);
+        }
         
         setCitiesData(prev => {
-          const exists = prev.some(city => city.name === cityData.name);
-          return exists ? prev : [...prev, cityData];
+          // Usar o ID como identificador principal para comparação, sendo mais preciso
+          const exists = prev.some(city => city.id === cityData.id);
+          
+          // Se a cidade já existe na lista, não precisamos adicioná-la novamente
+          if (exists) return prev;
+          
+          // Caso contrário, adicionamos a nova cidade aos dados
+          console.log('Adicionando nova cidade aos dados:', cityData);
+          return [...prev, cityData];
         });
+        
+        console.log('City changed in App:', cityData);
       } catch (error) {
         console.error('Erro ao carregar dados da cidade:', error);
         setSnackbar({
@@ -261,16 +404,117 @@ const App = () => {
     if (!inputs.location || !inputs.capacity) return;
     
     try {
-      // Lógica de cálculo dos resultados
-      // ...
+      // Obter a cidade selecionada dos dados
+      const selectedCityData = citiesData.find(city => {
+        // Verifica se inputs.location é um objeto com city ou uma string
+        if (typeof inputs.location === 'object' && inputs.location !== null) {
+          return inputs.location.city?.id === city.id || 
+                 inputs.location.locationName === (city.state ? `${city.name}, ${city.state}` : city.name);
+        } else {
+          // Se for string, compara com o nome formatado da cidade
+          const cityStr = String(inputs.location || '').toLowerCase();
+          return city.name.toLowerCase() === cityStr || 
+                 (city.state ? `${city.name}, ${city.state}`.toLowerCase() === cityStr : false);
+        }
+      });
+
+      if (!selectedCityData) {
+        console.warn('Cidade não encontrada nos dados:', inputs.location);
+        return;
+      }
+
+      console.log('Calculando com a cidade:', selectedCityData);
       
-      // Exemplo de resultado calculado
+      // Lógica de cálculo dos resultados baseada no useSimulator.js
+      const { capacity, operatingHours, operatingDays } = inputs;
+      
+      const drycoolerHourlyConsumption = capacity * 0.00186;
+      const drycoolerDailyConsumption = drycoolerHourlyConsumption * operatingHours;
+      const drycoolerMonthlyConsumption = drycoolerDailyConsumption * 30;
+      const drycoolerYearlyConsumption = drycoolerDailyConsumption * operatingDays;
+      
+      const towerHourlyConsumption = capacity * 0.019;
+      const towerDailyConsumption = towerHourlyConsumption * operatingHours;
+      const towerMonthlyConsumption = towerDailyConsumption * 30;
+      const towerYearlyConsumption = towerDailyConsumption * operatingDays;
+      
+      const yearlyDifference = towerYearlyConsumption - drycoolerYearlyConsumption;
+      const yearlyDifferencePercentage = (yearlyDifference / towerYearlyConsumption) * 100;
+
+      // Usar os dados da cidade para ajustar os cálculos
+      const waterConsumptionFactor = selectedCityData.water_consumption_year 
+        ? selectedCityData.water_consumption_year / 880000 // Fator normalizado considerando 880000 como base
+        : 1.0; // Valor padrão se não houver dados
+
+      // Calcular as economias anuais, mensais, etc. para uso posterior
+      const yearlyWaterSavings = yearlyDifference * waterConsumptionFactor;
+      const monthlySavings = (yearlyWaterSavings / 12); // Simplificação
+      const yearlyCostSavings = yearlyDifference * 0.0105 * waterConsumptionFactor;
+      const yearlyCo2Savings = yearlyDifference * 0.00058 * waterConsumptionFactor;
+
+      // Calcular o valor da cidade para temperatura média
+      const averageTemperature = selectedCityData.average_temperature || 25; // Valor padrão caso não exista
+
+      // Resultados calculados com base nos dados reais - estrutura completa compatível com WaterSavingsResults.jsx
       const calculatedResults = {
-        waterSavings: 0.5, // Exemplo: 50% de economia
-        annualSavings: 10000, // Exemplo: R$ 10.000,00
-        co2Reduction: 5000, // Exemplo: 5.000 kg de CO2
+        drycooler: {
+          moduleCapacity: 168.74,
+          modules: Math.ceil(capacity / 168.74),
+          totalCapacity: Math.ceil(capacity / 168.74) * 168.74,
+          nominalWaterFlow: 24.2,
+          evaporationPercentage: 0.16,
+          evaporationFlow: 0.0387,
+          consumption: {
+            hourly: drycoolerHourlyConsumption,
+            daily: drycoolerDailyConsumption,
+            monthly: drycoolerMonthlyConsumption,
+            yearly: drycoolerYearlyConsumption * waterConsumptionFactor,
+          },
+        },
+        tower: {
+          capacity: capacity,
+          consumption: {
+            hourly: towerHourlyConsumption,
+            daily: towerDailyConsumption,
+            monthly: towerMonthlyConsumption,
+            yearly: towerYearlyConsumption * waterConsumptionFactor,
+          },
+        },
+        savings: {
+          water: {
+            daily: (towerDailyConsumption - drycoolerDailyConsumption) * waterConsumptionFactor,
+            monthly: (towerMonthlyConsumption - drycoolerMonthlyConsumption) * waterConsumptionFactor,
+            yearly: yearlyWaterSavings,
+          },
+          cost: {
+            daily: (towerDailyConsumption - drycoolerDailyConsumption) * 0.0105 * waterConsumptionFactor,
+            monthly: (towerMonthlyConsumption - drycoolerMonthlyConsumption) * 0.0105 * waterConsumptionFactor,
+            yearly: yearlyCostSavings,
+          },
+          co2: {
+            daily: (towerDailyConsumption - drycoolerDailyConsumption) * 0.00058 * waterConsumptionFactor,
+            monthly: (towerMonthlyConsumption - drycoolerMonthlyConsumption) * 0.00058 * waterConsumptionFactor,
+            yearly: yearlyCo2Savings,
+          },
+        },
+        // Os campos esperados pelo WaterSavingsResults.jsx
+        comparison: {
+          yearly_difference: yearlyWaterSavings,
+          yearly_difference_percentage: yearlyDifferencePercentage,
+          monthly_savings: monthlySavings,          // Campo adicional necessário
+          yearly_savings: yearlyCostSavings,       // Campo adicional necessário (corrigido)
+          co2_savings: yearlyCo2Savings,           // Campo adicional necessário
+          energy_savings: yearlyCostSavings * 0.2, // Estimativa de economia energética
+          water_savings: yearlyWaterSavings,       // Campo adicional necessário
+        },
+        city: {
+          name: selectedCityData.name,
+          state: selectedCityData.state || 'Brasil',
+          average_temperature: averageTemperature,
+        }
       };
       
+      console.log('Resultados calculados:', calculatedResults);
       setResults(calculatedResults);
     } catch (error) {
       console.error('Erro ao calcular resultados:', error);
@@ -345,16 +589,32 @@ const App = () => {
     }));
   };
 
-  const handleCityChange = (cityData) => {
-    setInputs(prev => ({
-      ...prev,
-      location: cityData.name,
-      coordinates: cityData.coordinates
-    }));
+  const handleCityChange = (city) => {
+    console.log('City changed in App:', city);
+    if (city) {
+      setInputs(prev => ({
+        ...prev,
+        location: city,
+        coordinates: city.coordinates || { lat: 0, lng: 0 }
+      }));
+      
+      // Após selecionar a cidade, avance para a tela de resultados (etapa 4)
+      // Adicionamos um pequeno delay para garantir que os cálculos sejam feitos
+      setTimeout(() => {
+        console.log('Avançando para tela de resultados após seleção de cidade');
+        setActiveStep(4);
+      }, 500);
+    } else {
+      setInputs(prev => ({
+        ...prev,
+        location: null,
+        coordinates: { lat: 0, lng: 0 }
+      }));
+    }
   };
 
   const handleFinishSimulation = () => {
-    handleNext(); // Vai para a tela de agradecimento
+    setBudgetModalOpen(true);
   };
 
   const handleBudgetRequest = async (budgetData) => {
@@ -405,7 +665,7 @@ const App = () => {
       case 0:
         return (
           <WelcomePage 
-            onStart={handleStartSimulation} 
+            onStartSimulation={handleStartSimulation} 
             darkMode={darkMode} 
             onToggleDarkMode={() => setDarkMode(!darkMode)} 
           />
@@ -413,9 +673,9 @@ const App = () => {
       case 1:
         return (
           <UserDataForm 
-            data={userData} 
+            userData={userData} 
             onChange={handleUserDataChange} 
-            onNext={handleNext} 
+            darkMode={darkMode}
           />
         );
       case 2:
@@ -431,10 +691,9 @@ const App = () => {
         return (
           <CitySelectionForm 
             cities={cities} 
-            selectedCity={inputs.location} 
-            onSelectCity={handleCityChange} 
-            onNext={handleNext} 
-            onBack={handleBack} 
+            selectedCity={inputs.location}
+            onSelectCity={handleCityChange}
+            darkMode={darkMode}
           />
         );
       case 4:
@@ -472,14 +731,28 @@ const App = () => {
           color: 'text.primary'
         }}>
           {/* Cabeçalho */}
-          <ResponsiveNavigation 
-            darkMode={darkMode}
-            onToggleDarkMode={() => setDarkMode(!darkMode)}
-            onHomeClick={() => {
-              setActiveStep(0);
-              navigate('/');
+          <Box 
+            component="header"
+            sx={{
+              p: 2,
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              backgroundColor: 'background.paper',
+              borderBottom: `1px solid ${theme.palette.divider}`
             }}
-          />
+          >
+            <Typography variant="h6" component="h1">
+              Simulador de Economia de Água
+            </Typography>
+            <IconButton 
+              onClick={() => setDarkMode(!darkMode)}
+              color="inherit"
+              aria-label={darkMode ? 'Modo claro' : 'Modo escuro'}
+            >
+              {darkMode ? <LightMode /> : <DarkMode />}
+            </IconButton>
+          </Box>
           
           {/* Conteúdo principal */}
           <Box 
@@ -525,6 +798,24 @@ const App = () => {
                 </Paper>
                 
                 <AccessibilityHelper />
+                
+                {/* Navegação responsiva */}
+                <ResponsiveNavigation
+                  activeStep={activeStep}
+                  totalSteps={steps.length}
+                  onBack={handleBack}
+                  onNext={handleNext}
+                  onFinish={handleFinishSimulation}
+                  onHome={() => {
+                    setActiveStep(0);
+                    navigate('/');
+                  }}
+                  isLoading={isLoading}
+                  canProceed={true}
+                  backLabel="Voltar"
+                  nextLabel="Próximo"
+                  finishLabel="Solicitar Orçamento"
+                />
               </>
             )}
             
@@ -584,4 +875,11 @@ const App = () => {
   );
 };
 
-export default App;
+// Envolve o App com o ErrorBoundary
+export default function AppWithErrorBoundary() {
+  return (
+    <AppErrorBoundary>
+      <App />
+    </AppErrorBoundary>
+  );
+}
