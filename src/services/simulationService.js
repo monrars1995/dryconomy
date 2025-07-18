@@ -5,6 +5,20 @@ import { cityParameters, commonParameters } from '../config/cityParameters';
 const WEBHOOK_URL = 'https://webhook.myc360.com/webhook/dryconomy';
 
 /**
+ * Helper function to get local city data as fallback
+ * @returns {Array} Array of city objects with default values
+ */
+const getLocalCities = () => {
+  return Object.keys(cityParameters).map(name => ({
+    id: name.toLowerCase().replace(/\s+/g, '-'),
+    name: name,
+    state: '',
+    country: 'Brasil',
+    ...cityParameters[name]
+  }));
+};
+
+/**
  * Salva os dados da simulação no Supabase e envia para o webhook existente (se habilitado)
  * @param {Object} simulationData - Dados da simulação
  * @returns {Promise} - Promessa com a resposta da operação
@@ -212,7 +226,7 @@ export const saveSimulation = async (simulationData) => {
       savedToWebhook: webhookSuccess
     };
   } else {
-<<<<<<< HEAD
+    console.error('Falha completa no salvamento da simulação');
     // Retornamos sucesso mesmo com falha para não bloquear o usuário
     // Os dados estão salvos no localStorage como backup
     return {
@@ -220,12 +234,9 @@ export const saveSimulation = async (simulationData) => {
       leadId: null,
       savedToSupabase: false,
       savedToWebhook: false,
-      localBackup: true
+      localBackup: true,
+      error: 'Não foi possível salvar a simulação em nenhum dos destinos. Os dados foram salvos localmente.'
     };
-=======
-    console.error('Falha completa no salvamento da simulação');
-    throw new Error('Não foi possível salvar a simulação em nenhum dos destinos. Verifique sua conexão e tente novamente.');
->>>>>>> f627d27145745ebfcaed14a3c39936616e88d121
   }
 };
 
@@ -239,29 +250,14 @@ export const getCities = async () => {
       .order('name', { ascending: true });
       
     if (error) {
-<<<<<<< HEAD
-      throw error;
-=======
       console.warn('Erro ao buscar cidades do Supabase, usando dados locais:', error);
       // Fallback para dados locais
-      return Object.keys(cityParameters).map(name => ({
-        id: name.toLowerCase().replace(/\s+/g, '-'),
-        name: name,
-        state: '',
-        country: 'Brasil',
-        ...cityParameters[name]
-      }));
->>>>>>> f627d27145745ebfcaed14a3c39936616e88d121
+      return getLocalCities();
     }
     
     if (data && data.length > 0) {
       return data;
     }
-<<<<<<< HEAD
-  } catch (error) {
-    // Se falhar, usamos os dados locais
-=======
->>>>>>> f627d27145745ebfcaed14a3c39936616e88d121
     
     // Se não houver dados no Supabase, usamos os dados locais
     console.log('Nenhuma cidade encontrada no Supabase, usando dados locais');
@@ -374,8 +370,27 @@ export const getSimulations = async ({
   order = 'desc',
 } = {}) => {
   try {
+    // Verificar se o usuário está autenticado
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session) {
+      console.error('Erro de autenticação: Nenhuma sessão ativa encontrada');
+      return { data: [], total: 0, page, perPage, totalPages: 0, error: 'Não autenticado' };
+    }
+
     const from = (page - 1) * perPage;
     const to = from + perPage - 1;
+
+    console.log('Buscando simulações com os parâmetros:', {
+      page,
+      perPage,
+      search,
+      orderBy,
+      order,
+      from,
+      to,
+      token: session?.access_token ? 'Token presente' : 'Token ausente'
+    });
 
     let query = supabase
       .from('simulations')
@@ -387,7 +402,8 @@ export const getSimulations = async ({
         comparison_results(yearly_difference, yearly_difference_percentage)
       `,
         { count: 'exact' }
-      );
+      )
+      .eq('user_id', session.user.id); // Filtra apenas as simulações do usuário atual
 
     // Aplicar filtro de busca
     if (search) {
@@ -405,17 +421,22 @@ export const getSimulations = async ({
     // Paginação
     query = query.range(from, to);
 
-    const { data, count, error } = await query;
+    const { data, count, error, status, statusText } = await query;
 
-    if (error) throw error;
+    console.log('Resposta da API:', { status, statusText, error, count: count || 0 });
+
+    if (error) {
+      console.error('Erro ao buscar simulações:', error);
+      throw error;
+    }
 
     // Mapear os resultados para um formato mais plano
     const formattedData = (data || []).map((sim) => ({
       ...sim,
-      drycooler_yearly_consumption: sim.drycooler_results?.yearly_consumption,
-      tower_yearly_consumption: sim.tower_results?.yearly_consumption,
-      comparison_yearly_difference: sim.comparison_results?.yearly_difference,
-      comparison_yearly_difference_percentage: sim.comparison_results?.yearly_difference_percentage,
+      drycooler_yearly_consumption: sim.drycooler_results?.[0]?.yearly_consumption,
+      tower_yearly_consumption: sim.tower_results?.[0]?.yearly_consumption,
+      comparison_yearly_difference: sim.comparison_results?.[0]?.yearly_difference,
+      comparison_yearly_difference_percentage: sim.comparison_results?.[0]?.yearly_difference_percentage,
     }));
 
     return {
@@ -424,8 +445,25 @@ export const getSimulations = async ({
       page,
       perPage,
       totalPages: Math.ceil((count || 0) / perPage),
+      error: null
     };
   } catch (error) {
-    throw error;
+    console.error('Erro em getSimulations:', {
+      message: error.message,
+      code: error.code,
+      details: error.details,
+      hint: error.hint,
+      status: error.status
+    });
+    
+    // Retornar um objeto vazio em caso de erro para não quebrar a UI
+    return { 
+      data: [], 
+      total: 0, 
+      page, 
+      perPage, 
+      totalPages: 0, 
+      error: error.message || 'Erro ao carregar simulações' 
+    };
   }
 };

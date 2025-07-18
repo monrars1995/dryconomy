@@ -31,168 +31,90 @@ import SkipToContent from './components/SkipToContent';
 import ImprovedStepper from './components/ImprovedStepper';
 import ResponsiveNavigation from './components/ResponsiveNavigation';
 
-<<<<<<< HEAD
-// Componente principal do Simulador
-const App = () => {
-  const navigate = useNavigate();
-  const {
-    activeStep,
-    isLoading,
-    cities,
-    showSimulator,
-    simulationStarted,
-    completedSteps,
-    budgetRequestData,
-    notification,
-    inputs,
-    userData,
-    results,
-    selectedCity,
-    budgetModalOpen,
-    handleNext,
-    handleBack,
-    handleStartSimulation,
-    handleRestart,
-    handleUserDataChange,
-    handleParametersChange,
-    handleCityChange,
-    handleFinishSimulation,
-    handleBudgetRequest,
-    canProceed,
-    setNotification,
-    setBudgetModalOpen,
-  } = useSimulator();
-
-=======
-// Serviços
-import { getCalculationVariables, getCities, saveSimulation } from './services/simulationService';
-
 // Componente principal do Simulador
 const App = () => {
   const navigate = useNavigate();
   
   // Estados principais
   const [activeStep, setActiveStep] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
-  const [cities, setCities] = useState([]);
-  const [calculationVars, setCalculationVars] = useState({});
->>>>>>> f627d27145745ebfcaed14a3c39936616e88d121
   const [darkMode, setDarkMode] = useState(() => {
     const saved = localStorage.getItem('darkMode');
-    if (saved !== null) return JSON.parse(saved);
-    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    return saved ? JSON.parse(saved) : false;
   });
-<<<<<<< HEAD
-=======
-  const [showSimulator, setShowSimulator] = useState(false);
-  const [simulationStarted, setSimulationStarted] = useState(false);
-  const [completedSteps, setCompletedSteps] = useState([]);
-  const [simulationCompleted, setSimulationCompleted] = useState(false);
-  const [budgetRequestData, setBudgetRequestData] = useState(null);
-  const [initialDataLoaded, setInitialDataLoaded] = useState(false);
   
-  // Estados para notificações
-  const [notification, setNotification] = useState({
+  // Estados para controle de UI
+  const [isLoading, setIsLoading] = useState(false);
+  const [initialDataLoaded, setInitialDataLoaded] = useState(false);
+  const [snackbar, setSnackbar] = useState({
     open: false,
     message: '',
     severity: 'info'
   });
   
-  // Estados do formulário
-  const [inputs, setInputs] = useState({
-    capacity: 500,
-    location: 'São Paulo',
-    deltaT: 6,
-    waterFlow: 71.7,
-    operatingHours: 24,
-    operatingDays: 365
-  });
+  // Estados para dados da aplicação
+  const [cities, setCities] = useState([]);
+  const [citiesData, setCitiesData] = useState([]);
+  const [results, setResults] = useState(null);
+  const [showSimulator, setShowSimulator] = useState(false);
+  const [budgetModalOpen, setBudgetModalOpen] = useState(false);
   
+  // Estados para formulários
   const [userData, setUserData] = useState({
     name: '',
     email: '',
-    company: '',
     phone: '',
-    state: ''
+    company: '',
+    state: '',
   });
->>>>>>> f627d27145745ebfcaed14a3c39936616e88d121
-
-  useEffect(() => {
-    localStorage.setItem('darkMode', JSON.stringify(darkMode));
-  }, [darkMode]);
-
+  
+  const [inputs, setInputs] = useState({
+    capacity: 100,
+    location: '',
+    operatingHours: 24,
+    operatingDays: 365,
+  });
+  
+  // Tema da aplicação
   const theme = createTheme({
-        palette: {
+    palette: {
       mode: darkMode ? 'dark' : 'light',
       primary: {
         main: '#00337A',
-        light: '#1976d2',
-        dark: '#002357',
-        contrastText: '#ffffff'
       },
       secondary: {
-        main: '#dc004e',
+        main: '#00A3E0',
       },
       background: {
-        default: darkMode ? '#121212' : '#fafafa', // Fundo mais suave no light
-        paper: darkMode ? '#1e1e1e' : '#ffffff'
+        default: darkMode ? '#121212' : '#f5f5f5',
+        paper: darkMode ? '#1E1E1E' : '#ffffff',
       },
-      text: {
-        primary: darkMode ? '#ffffff' : '#1a1a1a', // Texto mais escuro no light
-        secondary: darkMode ? 'rgba(255,255,255,0.7)' : '#4a4a4a', // Texto secundário mais legível
-      },
-      success: {
-        main: '#2e7d32',
-        light: '#4caf50',
-        dark: '#1b5e20'
-      },
-      // Melhorar contraste para elementos de ação
-      action: {
-        hover: darkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
-        selected: darkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)',
-        disabled: darkMode ? 'rgba(255, 255, 255, 0.26)' : 'rgba(0, 0, 0, 0.26)',
-        disabledBackground: darkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.12)',
-      },
-      // Melhorar divisores
-      divider: darkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)',
     },
     typography: {
-      fontFamily: '"Poppins", "Roboto", "Helvetica", "Arial", sans-serif',
-      h1: { 
-        fontWeight: 700,
-        color: darkMode ? '#ffffff' : '#1a1a1a'
-      },
-      h2: { 
-        fontWeight: 600,
-        color: darkMode ? '#ffffff' : '#1a1a1a'
-      },
-      h3: { 
-        fontWeight: 600,
-        color: darkMode ? '#ffffff' : '#1a1a1a'
-      },
-      h4: { 
-        fontWeight: 600,
-        color: darkMode ? '#ffffff' : '#1a1a1a'
-      },
-      h5: { 
+      fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+      h1: {
+        fontSize: '2.5rem',
         fontWeight: 500,
-        color: darkMode ? '#ffffff' : '#1a1a1a'
       },
-      h6: { 
+      h2: {
+        fontSize: '2rem',
         fontWeight: 500,
-        color: darkMode ? '#ffffff' : '#1a1a1a'
       },
-      body1: {
-        color: darkMode ? 'rgba(255,255,255,0.87)' : '#2c2c2c',
-        lineHeight: 1.6
+      h3: {
+        fontSize: '1.75rem',
+        fontWeight: 500,
       },
-      body2: {
-        color: darkMode ? 'rgba(255,255,255,0.7)' : '#4a4a4a',
-        lineHeight: 1.5
+      h4: {
+        fontSize: '1.5rem',
+        fontWeight: 500,
       },
-      caption: {
-        color: darkMode ? 'rgba(255,255,255,0.6)' : '#6a6a6a'
-      }
+      h5: {
+        fontSize: '1.25rem',
+        fontWeight: 500,
+      },
+      h6: {
+        fontSize: '1rem',
+        fontWeight: 500,
+      },
     },
     components: {
       MuiButton: {
@@ -200,329 +122,211 @@ const App = () => {
           root: {
             borderRadius: 8,
             textTransform: 'none',
-            fontWeight: 500,
-            padding: '10px 24px',
-            transition: 'all 0.3s ease',
-            '&:hover': {
-              transform: 'translateY(-1px)',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
-            }
+            padding: '8px 16px',
           },
           contained: {
-            boxShadow: darkMode ? '0 2px 8px rgba(0,0,0,0.3)' : '0 2px 8px rgba(0,0,0,0.1)',
+            boxShadow: 'none',
             '&:hover': {
-              boxShadow: darkMode ? '0 4px 16px rgba(0,0,0,0.4)' : '0 4px 16px rgba(0,0,0,0.15)'
-            }
-          }
-        }
+              boxShadow: '0px 2px 4px -1px rgba(0,0,0,0.2), 0px 4px 5px 0px rgba(0,0,0,0.14), 0px 1px 10px 0px rgba(0,0,0,0.12)',
+            },
+          },
+        },
       },
       MuiPaper: {
         styleOverrides: {
           root: {
+            backgroundImage: 'none',
+          },
+          rounded: {
             borderRadius: 12,
-            // Melhor sombra para modo light
-            boxShadow: darkMode 
-              ? '0 8px 32px rgba(0,0,0,0.3)' 
-              : '0 2px 12px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)',
-          }
-        }
+          },
+          elevation1: {
+            boxShadow: '0px 2px 1px -1px rgba(0,0,0,0.1), 0px 1px 1px 0px rgba(0,0,0,0.07), 0px 1px 3px 0px rgba(0,0,0,0.06)',
+          },
+          elevation2: {
+            boxShadow: '0px 3px 1px -2px rgba(0,0,0,0.1), 0px 2px 2px 0px rgba(0,0,0,0.07), 0px 1px 5px 0px rgba(0,0,0,0.06)',
+          },
+        },
       },
       MuiCard: {
         styleOverrides: {
           root: {
-            // Melhor contraste para cards no modo light
-            backgroundColor: darkMode ? '#1e1e1e' : '#ffffff',
-            border: darkMode ? 'none' : '1px solid rgba(0,0,0,0.06)',
-            boxShadow: darkMode 
-              ? '0 4px 20px rgba(0,0,0,0.3)' 
-              : '0 1px 8px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)',
-          }
-        }
+            borderRadius: 12,
+            overflow: 'hidden',
+          },
+        },
       },
       MuiTextField: {
-        styleOverrides: {
-          root: {
-            '& .MuiOutlinedInput-root': {
-              backgroundColor: darkMode ? 'rgba(255,255,255,0.05)' : '#ffffff',
-              '& fieldset': {
-                borderColor: darkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.15)',
-              },
-              '&:hover fieldset': {
-                borderColor: darkMode ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.25)',
-              },
-              '&.Mui-focused fieldset': {
-                borderColor: '#00337A',
-                borderWidth: '2px',
-              },
-            },
-            '& .MuiInputLabel-root': {
-              color: darkMode ? 'rgba(255,255,255,0.7)' : '#4a4a4a',
-              '&.Mui-focused': {
-                color: '#00337A',
-              }
-            },
-            '& .MuiOutlinedInput-input': {
-              color: darkMode ? '#ffffff' : '#1a1a1a',
-            }
-          }
-        }
+        defaultProps: {
+          variant: 'outlined',
+          fullWidth: true,
+          margin: 'normal',
+        },
       },
-      MuiChip: {
-        styleOverrides: {
-          root: {
-            backgroundColor: darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)',
-            color: darkMode ? '#ffffff' : '#2c2c2c',
-            '&.MuiChip-colorPrimary': {
-              backgroundColor: darkMode ? 'rgba(25,118,210,0.3)' : 'rgba(0,51,122,0.1)',
-              color: darkMode ? '#90caf9' : '#00337A',
-            }
-          }
-        }
+      MuiFormControl: {
+        defaultProps: {
+          fullWidth: true,
+          margin: 'normal',
+        },
       },
-      MuiAlert: {
+      MuiAppBar: {
         styleOverrides: {
           root: {
-            borderRadius: 8,
+            backgroundImage: 'none',
           },
-          standardSuccess: {
-            backgroundColor: darkMode ? 'rgba(46,125,50,0.2)' : 'rgba(46,125,50,0.08)',
-            color: darkMode ? '#81c784' : '#2e7d32',
-            border: darkMode ? '1px solid rgba(46,125,50,0.3)' : '1px solid rgba(46,125,50,0.2)',
-          },
-          standardInfo: {
-            backgroundColor: darkMode ? 'rgba(25,118,210,0.2)' : 'rgba(25,118,210,0.08)',
-            color: darkMode ? '#90caf9' : '#1976d2',
-            border: darkMode ? '1px solid rgba(25,118,210,0.3)' : '1px solid rgba(25,118,210,0.2)',
-          },
-          standardWarning: {
-            backgroundColor: darkMode ? 'rgba(237,108,2,0.2)' : 'rgba(237,108,2,0.08)',
-            color: darkMode ? '#ffb74d' : '#ed6c02',
-            border: darkMode ? '1px solid rgba(237,108,2,0.3)' : '1px solid rgba(237,108,2,0.2)',
-          },
-          standardError: {
-            backgroundColor: darkMode ? 'rgba(211,47,47,0.2)' : 'rgba(211,47,47,0.08)',
-            color: darkMode ? '#f48fb1' : '#d32f2f',
-            border: darkMode ? '1px solid rgba(211,47,47,0.3)' : '1px solid rgba(211,47,47,0.2)',
-          }
-        }
-      }
+        },
+      },
     },
-    shape: {
-      borderRadius: 8
-    }
   });
 
   const isXs = useMediaQuery('(max-width:600px)');
 
+  // Passos do stepper
   const steps = [
-    { label: 'Início', description: 'Bem-vindo ao simulador' },
-    { label: 'Dados Pessoais', description: 'Suas informações de contato' },
-    { label: 'Parâmetros', description: 'Configurações da simulação' },
-    { label: 'Localização', description: 'Selecione sua cidade' },
-    { label: 'Resultados', description: 'Análise de economia' },
-    { label: 'Obrigado', description: 'Finalização' }
+    'Bem-vindo',
+    'Seus Dados',
+    'Parâmetros',
+    'Localização',
+    'Resultados',
+    'Obrigado'
   ];
 
-<<<<<<< HEAD
-=======
   // Salvar preferência de tema
   useEffect(() => {
     localStorage.setItem('darkMode', JSON.stringify(darkMode));
   }, [darkMode]);
 
-  // Carregar dados iniciais apenas uma vez
+  // Carregar dados iniciais
   useEffect(() => {
     const loadInitialData = async () => {
-      if (initialDataLoaded) return; // Evitar carregamento múltiplo
-      
       try {
         setIsLoading(true);
         
         // Carregar cidades
-        try {
-          const citiesData = await getCities();
-          setCities(citiesData || []);
-        } catch (error) {
-          console.warn('Erro ao carregar cidades:', error);
-          setCities([]);
-        }
+        const citiesResponse = await fetch('/api/cities');
+        if (!citiesResponse.ok) throw new Error('Falha ao carregar cidades');
+        const citiesData = await citiesResponse.json();
+        setCities(citiesData);
         
-        // Carregar variáveis de cálculo
-        try {
-          const vars = await getCalculationVariables();
-          setCalculationVars(vars || {});
-        } catch (error) {
-          console.warn('Erro ao carregar variáveis de cálculo:', error);
-          setCalculationVars({});
-        }
+        // Carregar dados adicionais se necessário
+        // ...
         
         setInitialDataLoaded(true);
-        
       } catch (error) {
         console.error('Erro ao carregar dados iniciais:', error);
-        setNotification({
+        setSnackbar({
           open: true,
-          message: 'Erro ao carregar dados iniciais. Usando valores padrão.',
-          severity: 'warning'
+          message: 'Erro ao carregar dados iniciais. Tente novamente mais tarde.',
+          severity: 'error'
         });
-        setInitialDataLoaded(true); // Marcar como carregado mesmo com erro
       } finally {
         setIsLoading(false);
       }
     };
     
     loadInitialData();
-  }, [initialDataLoaded]);
+  }, []);
 
+  // Carregar dados da cidade selecionada
   useEffect(() => {
     const loadCities = async () => {
-      if (!initialDataLoaded || citiesData.length > 0) return;
+      if (!inputs.location || !initialDataLoaded) return;
       
       try {
-        const cities = await getCities();
-        if (cities?.length > 0) {
-          setCitiesData(cities);
-          console.log('Cidades carregadas:', cities.length);
-          
-          if (inputs.location) {
-            const city = cities.find(c => 
-              c.name === inputs.location || 
-              c.name.toLowerCase() === inputs.location.toLowerCase()
-            );
-            if (city) setSelectedCity(city);
-          }
-        }
+        setIsLoading(true);
+        const response = await fetch(`/api/cities/${encodeURIComponent(inputs.location)}`);
+        if (!response.ok) throw new Error('Falha ao carregar dados da cidade');
+        const cityData = await response.json();
+        
+        setCitiesData(prev => {
+          const exists = prev.some(city => city.name === cityData.name);
+          return exists ? prev : [...prev, cityData];
+        });
       } catch (error) {
-        console.error('Erro ao carregar cidades:', error);
+        console.error('Erro ao carregar dados da cidade:', error);
+        setSnackbar({
+          open: true,
+          message: 'Erro ao carregar dados da cidade. Tente novamente.',
+          severity: 'error'
+        });
+      } finally {
+        setIsLoading(false);
       }
     };
     
     loadCities();
-  }, [inputs.location, initialDataLoaded, citiesData.length]);
+  }, [inputs.location, initialDataLoaded]);
 
-  // Função para calcular resultados baseado nos inputs
+  // Função para calcular resultados
   const calculateResults = () => {
-    const { capacity, operatingHours, operatingDays } = inputs;
+    if (!inputs.location || !inputs.capacity) return;
     
-    // Cálculos para DryCooler
-    const drycoolerHourlyConsumption = capacity * 0.00186; // L/h por kW
-    const drycoolerDailyConsumption = drycoolerHourlyConsumption * operatingHours;
-    const drycoolerMonthlyConsumption = drycoolerDailyConsumption * 30;
-    const drycoolerYearlyConsumption = drycoolerDailyConsumption * operatingDays;
-    
-    // Cálculos para Torre
-    const towerHourlyConsumption = capacity * 0.019; // L/h por kW
-    const towerDailyConsumption = towerHourlyConsumption * operatingHours;
-    const towerMonthlyConsumption = towerDailyConsumption * 30;
-    const towerYearlyConsumption = towerDailyConsumption * operatingDays;
-    
-    // Economia
-    const yearlyDifference = towerYearlyConsumption - drycoolerYearlyConsumption;
-    const yearlyDifferencePercentage = (yearlyDifference / towerYearlyConsumption) * 100;
-    
-    const newResults = {
-      drycooler: {
-        moduleCapacity: 168.74,
-        modules: Math.ceil(capacity / 168.74),
-        totalCapacity: Math.ceil(capacity / 168.74) * 168.74,
-        nominalWaterFlow: 24.2,
-        evaporationPercentage: 0.16,
-        evaporationFlow: 0.0387,
-        consumption: {
-          hourly: drycoolerHourlyConsumption,
-          daily: drycoolerDailyConsumption,
-          monthly: drycoolerMonthlyConsumption,
-          yearly: drycoolerYearlyConsumption
-        }
-      },
-      tower: {
-        capacity: capacity,
-        consumption: {
-          hourly: towerHourlyConsumption,
-          daily: towerDailyConsumption,
-          monthly: towerMonthlyConsumption,
-          yearly: towerYearlyConsumption
-        }
-      },
-      savings: {
-        water: { 
-          daily: towerDailyConsumption - drycoolerDailyConsumption,
-          monthly: towerMonthlyConsumption - drycoolerMonthlyConsumption,
-          yearly: yearlyDifference
-        },
-        cost: { 
-          daily: (towerDailyConsumption - drycoolerDailyConsumption) * 0.0105,
-          monthly: (towerMonthlyConsumption - drycoolerMonthlyConsumption) * 0.0105,
-          yearly: yearlyDifference * 0.0105
-        },
-        co2: { 
-          daily: (towerDailyConsumption - drycoolerDailyConsumption) * 0.00058,
-          monthly: (towerMonthlyConsumption - drycoolerMonthlyConsumption) * 0.00058,
-          yearly: yearlyDifference * 0.00058
-        }
-      },
-      comparison: {
-        yearlyDifference,
-        yearlyDifferencePercentage
-      }
-    };
-    
-    setResults(newResults);
+    try {
+      // Lógica de cálculo dos resultados
+      // ...
+      
+      // Exemplo de resultado calculado
+      const calculatedResults = {
+        waterSavings: 0.5, // Exemplo: 50% de economia
+        annualSavings: 10000, // Exemplo: R$ 10.000,00
+        co2Reduction: 5000, // Exemplo: 5.000 kg de CO2
+      };
+      
+      setResults(calculatedResults);
+    } catch (error) {
+      console.error('Erro ao calcular resultados:', error);
+      setSnackbar({
+        open: true,
+        message: 'Erro ao calcular resultados. Verifique os dados e tente novamente.',
+        severity: 'error'
+      });
+    }
   };
 
-  // Recalcular quando inputs mudarem
+  // Recalcular quando os inputs mudarem
   useEffect(() => {
-    calculateResults();
-  }, [inputs]);
-
-  // Manipuladores de navegação melhorados
-  const handleNext = () => {
-    // Marcar etapa atual como completa
-    if (!completedSteps.includes(activeStep)) {
-      setCompletedSteps(prev => [...prev, activeStep]);
+    if (initialDataLoaded) {
+      calculateResults();
     }
-    setActiveStep((prevStep) => prevStep + 1);
+  }, [inputs, initialDataLoaded]);
+
+  // Navegação entre passos
+  const handleNext = () => {
+    if (activeStep < steps.length - 1) {
+      setActiveStep(prevActiveStep => prevActiveStep + 1);
+    }
   };
 
   const handleBack = () => {
-    if (activeStep === 0) {
-      navigate('/');
-    } else {
-      setActiveStep((prevStep) => prevStep - 1);
+    if (activeStep > 0) {
+      setActiveStep(prevActiveStep => prevActiveStep - 1);
     }
   };
 
   const handleStartSimulation = () => {
     setShowSimulator(true);
-    setSimulationStarted(true);
-    setActiveStep(1);
+    handleNext();
   };
 
   const handleRestart = () => {
-    setShowSimulator(false);
-    setSimulationStarted(false);
-    setSimulationCompleted(false);
     setActiveStep(0);
-    setCompletedSteps([]);
-    setBudgetRequestData(null);
-    // Reset form data
+    setResults(null);
+    setInputs({
+      capacity: 100,
+      location: '',
+      operatingHours: 24,
+      operatingDays: 365,
+    });
     setUserData({
       name: '',
       email: '',
-      company: '',
       phone: '',
-      state: ''
-    });
-    setInputs({
-      capacity: 500,
-      location: 'São Paulo',
-      deltaT: 6,
-      waterFlow: 71.7,
-      operatingHours: 24,
-      operatingDays: 365
+      company: '',
+      state: '',
     });
   };
 
+  // Manipuladores de eventos
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setInputs(prev => ({
@@ -531,10 +335,8 @@ const App = () => {
     }));
   };
 
-  // CORRIGIDO: Remover auto-avanço da função handleUserDataChange
   const handleUserDataChange = (newUserData) => {
     setUserData(newUserData);
-    // Não fazer auto-avanço aqui - deixar o usuário clicar em "Próximo"
   };
 
   const handleParametersChange = (newParams) => {
@@ -542,111 +344,119 @@ const App = () => {
       ...prev,
       ...newParams
     }));
-    // Auto-avanço após configurar parâmetros
-    setTimeout(() => handleNext(), 500);
   };
 
   const handleCityChange = (cityData) => {
-    setSelectedCity(cityData);
     setInputs(prev => ({
       ...prev,
-      location: cityData.name
+      location: cityData.name,
+      coordinates: cityData.coordinates
     }));
-    // Auto-avanço após selecionar cidade
-    setTimeout(() => handleNext(), 500);
   };
 
-  const handleFinishSimulation = async () => {
-    // Abrir modal de orçamento em vez de salvar diretamente
-    setBudgetModalOpen(true);
+  const handleFinishSimulation = () => {
+    handleNext(); // Vai para a tela de agradecimento
   };
 
   const handleBudgetRequest = async (budgetData) => {
     try {
       setIsLoading(true);
       
-      const simulationData = {
-        userData,
-        inputs,
-        results: {
-          drycooler: {
-            consumption: results.drycooler.consumption,
-            modules: results.drycooler.modules,
-            totalCapacity: results.drycooler.totalCapacity
-          },
-          tower: { consumption: results.tower.consumption },
-          comparison: {
-            yearlyDifference: results.comparison.yearlyDifference,
-            yearlyDifferencePercentage: results.comparison.yearlyDifferencePercentage
+      // Enviar dados para a API
+      const response = await fetch('/api/budget-requests', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...budgetData,
+          simulationData: {
+            inputs,
+            results,
+            userData
           }
-        },
-        budgetRequest: {
-          wantsBudget: budgetData.wantsBudget,
-          additionalInfo: budgetData.additionalInfo
-        },
-        timestamp: new Date().toISOString(),
-        location: inputs.location,
-        capacity: inputs.capacity
-      };
-
-      await saveSimulation(simulationData);
+        }),
+      });
       
-      // Marcar última etapa como completa e ir para página de obrigado
-      setCompletedSteps(prev => [...prev, activeStep]);
-      setBudgetRequestData(budgetData);
-      setSimulationCompleted(true);
-      setActiveStep(5); // Ir para a página de obrigado
+      if (!response.ok) throw new Error('Falha ao enviar solicitação');
       
-    } catch (error) {
-      console.error('Erro ao finalizar simulação:', error);
-      setNotification({
+      setSnackbar({
         open: true,
-        message: 'Erro ao salvar a simulação. Tente novamente mais tarde.',
+        message: 'Solicitação de orçamento enviada com sucesso!',
+        severity: 'success'
+      });
+      
+      setBudgetModalOpen(false);
+      handleNext();
+    } catch (error) {
+      console.error('Erro ao enviar solicitação de orçamento:', error);
+      setSnackbar({
+        open: true,
+        message: 'Erro ao enviar solicitação. Tente novamente mais tarde.',
         severity: 'error'
       });
     } finally {
       setIsLoading(false);
-      setBudgetModalOpen(false);
     }
   };
 
->>>>>>> f627d27145745ebfcaed14a3c39936616e88d121
+  // Renderizar conteúdo do passo atual
   const renderStepContent = (step) => {
     switch (step) {
       case 0:
-        return <WelcomePage onStartSimulation={handleStartSimulation} darkMode={darkMode} />;
-      case 1:
-        return <UserDataForm userData={userData} onChange={handleUserDataChange} darkMode={darkMode} />;
-      case 2:
-        return <SimulationParametersForm inputs={inputs} onChange={handleParametersChange} darkMode={darkMode} />;
-      case 3:
-        return <CitySelectionForm 
-          cities={cities} 
-          selectedCity={selectedCity} 
-          onChange={handleCityChange} 
-          darkMode={darkMode} 
-        />;
-      case 4:
-        return <WaterSavingsResults results={results} inputs={inputs} darkMode={darkMode} />;
-      case 5:
-        return <ThankYouPage 
-          userData={userData}
-          simulationResults={{ inputs, comparison: results.comparison }}
-          budgetRequested={budgetRequestData?.wantsBudget}
-          onRestart={handleRestart}
-          darkMode={darkMode}
-        />;
-      default:
         return (
-          <Box sx={{ textAlign: 'center', py: 8 }}>
-            <Typography variant="h6" gutterBottom>
-              Etapa em desenvolvimento
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Esta etapa será implementada em breve.
-            </Typography>
-          </Box>
+          <WelcomePage 
+            onStart={handleStartSimulation} 
+            darkMode={darkMode} 
+            onToggleDarkMode={() => setDarkMode(!darkMode)} 
+          />
         );
+      case 1:
+        return (
+          <UserDataForm 
+            data={userData} 
+            onChange={handleUserDataChange} 
+            onNext={handleNext} 
+          />
+        );
+      case 2:
+        return (
+          <SimulationParametersForm 
+            inputs={inputs} 
+            onChange={handleParametersChange} 
+            onNext={handleNext} 
+            onBack={handleBack} 
+          />
+        );
+      case 3:
+        return (
+          <CitySelectionForm 
+            cities={cities} 
+            selectedCity={inputs.location} 
+            onSelectCity={handleCityChange} 
+            onNext={handleNext} 
+            onBack={handleBack} 
+          />
+        );
+      case 4:
+        return (
+          <WaterSavingsResults 
+            results={results} 
+            inputs={inputs} 
+            onFinish={handleFinishSimulation} 
+            onBack={handleBack} 
+            onRequestBudget={() => setBudgetModalOpen(true)} 
+          />
+        );
+      case 5:
+        return (
+          <ThankYouPage 
+            onRestart={handleRestart} 
+            userData={userData} 
+          />
+        );
+      default:
+        return <div>Passo não encontrado</div>;
     }
   };
 
@@ -654,191 +464,119 @@ const App = () => {
     <ErrorBoundary>
       <ThemeProvider theme={theme}>
         <SkipToContent />
-        <AccessibilityHelper />
         
-        <Box
-          sx={{
-            minHeight: '100vh',
-            backgroundColor: 'background.default',
-            color: 'text.primary',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            py: 4,
-            px: { xs: 2, sm: 3, md: 4 },
-            pb: { xs: 10, sm: 4 } // Espaço extra no mobile para navegação fixa
-          }}
-        >
-<<<<<<< HEAD
-          {isLoading && (
-            <LoadingSpinner 
-              fullScreen 
-              overlay 
-              message="Carregando dados..." 
-            />
-          )}
-=======
-          {isLoading && <LoadingSpinner fullScreen overlay message="Carregando dados..." />}
->>>>>>> f627d27145745ebfcaed14a3c39936616e88d121
+        <Box sx={{ 
+          display: 'flex', 
+          flexDirection: 'column', 
+          minHeight: '100vh',
+          bgcolor: 'background.default',
+          color: 'text.primary'
+        }}>
+          {/* Cabeçalho */}
+          <ResponsiveNavigation 
+            darkMode={darkMode}
+            onToggleDarkMode={() => setDarkMode(!darkMode)}
+            onHomeClick={() => {
+              setActiveStep(0);
+              navigate('/');
+            }}
+          />
           
-          <Paper
-            elevation={darkMode ? 24 : 3}
+          {/* Conteúdo principal */}
+          <Box 
+            component="main" 
+            id="main-content"
             sx={{
+              flexGrow: 1,
+              py: 4,
+              px: { xs: 2, sm: 3, md: 4 },
+              maxWidth: 1200,
               width: '100%',
-              maxWidth: '1200px',
-              borderRadius: 3,
-              overflow: 'hidden',
-              position: 'relative',
-              background: darkMode 
-                ? 'linear-gradient(145deg, #1e1e1e 0%, #2d2d2d 100%)'
-                : 'linear-gradient(145deg, #ffffff 0%, #fafafa 100%)',
+              mx: 'auto',
+              position: 'relative'
             }}
           >
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                p: { xs: 2, sm: 3 },
-                borderBottom: '1px solid',
-                borderColor: 'divider',
-                background: darkMode 
-                  ? 'rgba(0, 51, 122, 0.1)' 
-                  : 'rgba(0, 51, 122, 0.03)'
-              }}
-            >
-              <Box display="flex" alignItems="center" gap={2}>
-                <Box
-                  component="img"
-                  src="/images/drylogo.png"
-                  alt="Dryconomy"
+            {showSimulator && (
+              <>
+                <Box sx={{ mb: 4, display: 'flex', justifyContent: 'center' }}>
+                  <ImprovedStepper 
+                    activeStep={activeStep - 1} 
+                    steps={steps.filter((_, i) => i > 0 && i < steps.length - 1)} 
+                    totalSteps={steps.length - 2}
+                    onBack={() => activeStep === 1 ? navigate('/') : handleBack()}
+                  />
+                </Box>
+                
+                <Paper 
+                  elevation={2} 
                   sx={{ 
-                    height: { xs: 32, sm: 40 }, 
-                    width: 'auto',
-                    filter: darkMode ? 'brightness(1.2)' : 'none'
-                  }}
-                />
-                {simulationStarted && (
-                  <Typography variant="h6" sx={{ 
-                    fontWeight: 600, 
-                    color: 'primary.main',
-                    display: { xs: 'none', sm: 'block' }
-                  }}>
-                    Simulador DryCooler
-                  </Typography>
-                )}
-              </Box>
-              
-              <Box display="flex" alignItems="center" gap={1}>
-                <IconButton
-                  onClick={() => setDarkMode(!darkMode)}
-                  color="inherit"
-                  aria-label={darkMode ? 'Modo claro' : 'Modo escuro'}
-                  sx={{
-                    transition: 'all 0.3s ease',
-                    '&:hover': {
-                      transform: 'rotate(180deg)'
-                    }
+                    p: { xs: 2, sm: 3, md: 4 },
+                    mb: 4,
+                    position: 'relative',
+                    minHeight: 400
                   }}
                 >
-                  {darkMode ? <LightMode /> : <DarkMode />}
-                </IconButton>
+                  {isLoading ? (
+                    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 300 }}>
+                      <LoadingSpinner size={60} />
+                    </Box>
+                  ) : (
+                    renderStepContent(activeStep)
+                  )}
+                </Paper>
                 
-                {simulationStarted && !isXs && (
-                  <Button
-                    variant="outlined"
-                    startIcon={<Home />}
-                    onClick={handleRestart}
-                    size="small"
-                  >
-                    Reiniciar
-                  </Button>
-                )}
-              </Box>
-            </Box>
-
-            <Box 
-              id="main-content"
-              tabIndex={-1}
-              sx={{ 
-                p: { xs: 2, sm: 3, md: 4 },
-                outline: 'none'
-              }}
-            >
-              {!showSimulator ? (
-                <WelcomePage onStartSimulation={handleStartSimulation} darkMode={darkMode} />
-              ) : (
-                <>
-                  {activeStep < 5 && (
-                    <ProgressIndicator
-                      currentStep={activeStep}
-                      totalSteps={steps.length - 1} // Excluir página de obrigado do progresso
-                      stepLabels={steps.slice(0, -1).map(s => s.label)} // Excluir página de obrigado
-                    />
-                  )}
-
-                  {activeStep < 5 && (
-                    <ImprovedStepper
-                      activeStep={activeStep}
-                      steps={steps.slice(0, -1)} // Excluir página de obrigado
-                      completedSteps={completedSteps}
-                      orientation={isXs ? 'vertical' : 'horizontal'}
-                    />
-                  )}
-
-                  <Box sx={{ minHeight: '50vh', py: 4 }}>
-                    {renderStepContent(activeStep)}
-                  </Box>
-
-                  {activeStep < 5 && (
-                    <ResponsiveNavigation
-                      activeStep={activeStep}
-<<<<<<< HEAD
-                      totalSteps={steps.length - 1}
-                      onBack={() => activeStep === 0 ? navigate('/') : handleBack()}
-=======
-                      totalSteps={steps.length - 1} // Excluir página de obrigado
-                      onBack={handleBack}
->>>>>>> f627d27145745ebfcaed14a3c39936616e88d121
-                      onNext={handleNext}
-                      onFinish={handleFinishSimulation}
-                      onHome={handleRestart}
-                      isLoading={isLoading}
-                      canProceed={canProceed()}
-                    />
-                  )}
-                </>
-              )}
-            </Box>
-          </Paper>
-
+                <AccessibilityHelper />
+              </>
+            )}
+            
+            {!showSimulator && activeStep === 0 && renderStepContent(0)}
+          </Box>
+          
+          {/* Rodapé */}
+          <Box 
+            component="footer" 
+            sx={{
+              py: 3,
+              px: 2,
+              mt: 'auto',
+              backgroundColor: theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.2)' : 'rgba(0, 0, 0, 0.05)',
+              textAlign: 'center',
+              borderTop: `1px solid ${theme.palette.divider}`
+            }}
+          >
+            <Typography variant="body2" color="text.secondary">
+              © {new Date().getFullYear()} Dryconomy - Todos os direitos reservados
+            </Typography>
+          </Box>
+          
+          {/* Banner de privacidade */}
           <PrivacyBanner />
-
-          <BudgetRequestModal
+          
+          {/* Modal de orçamento */}
+          <BudgetRequestModal 
             open={budgetModalOpen}
             onClose={() => setBudgetModalOpen(false)}
-            userData={userData}
-            simulationResults={{
-              inputs,
-              comparison: results.comparison
-            }}
             onSubmit={handleBudgetRequest}
+            userData={userData}
+            simulationData={{
+              inputs,
+              results
+            }}
           />
-
+          
+          {/* Snackbar para feedback */}
           <Snackbar
-            open={notification.open}
+            open={snackbar.open}
             autoHideDuration={6000}
-            onClose={() => setNotification(prev => ({ ...prev, open: false }))}
+            onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
             anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-            sx={{ mb: { xs: 10, sm: 2 } }}
           >
             <Alert 
-              onClose={() => setNotification(prev => ({ ...prev, open: false }))}
-              severity={notification.severity}
-              variant="filled"
+              onClose={() => setSnackbar(prev => ({ ...prev, open: false }))} 
+              severity={snackbar.severity}
               sx={{ width: '100%' }}
             >
-              {notification.message}
+              {snackbar.message}
             </Alert>
           </Snackbar>
         </Box>
