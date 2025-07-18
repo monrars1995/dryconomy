@@ -2,6 +2,8 @@ import { getSystemConfig } from './supabaseClient';
 import { supabase } from './authService';
 import { cityParameters, commonParameters } from '../config/cityParameters';
 
+const WEBHOOK_URL = 'https://webhook.myc360.com/webhook/dryconomy';
+
 /**
  * Salva os dados da simulação no Supabase e envia para o webhook existente (se habilitado)
  * @param {Object} simulationData - Dados da simulação
@@ -144,6 +146,49 @@ export const saveSimulation = async (simulationData) => {
     supabaseSuccess = false;
   }
   
+  // Tentativa 2: Webhook (se habilitado e Supabase falhou)
+  if (webhookEnabled && !supabaseSuccess) {
+    try {
+      console.log('Tentando salvar via webhook como fallback...');
+      
+      const webhookData = {
+        type: 'simulation',
+        timestamp: new Date().toISOString(),
+        data: {
+          userData: simulationData.userData,
+          inputs: {
+            location: simulationData.location,
+            capacity: simulationData.capacity,
+            operatingHours: simulationData.operatingHours,
+            operatingDays: simulationData.operatingDays
+          },
+          results: simulationData.results,
+          leadId: leadId // Pode ser null se o Supabase falhou
+        }
+      };
+      
+      const response = await fetch(WEBHOOK_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(webhookData)
+      });
+      
+      if (response.ok) {
+        webhookSuccess = true;
+        console.log('Dados enviados com sucesso para o webhook');
+      } else {
+        const errorText = await response.text();
+        console.error('Falha ao enviar dados para o webhook:', response.status, response.statusText, errorText);
+        throw new Error(`Webhook falhou: ${response.status} ${response.statusText}`);
+      }
+    } catch (webhookError) {
+      console.error('Erro ao enviar dados para o webhook:', webhookError);
+      webhookSuccess = false;
+    }
+  }
+  
   // Salvar uma cópia local como última garantia
   try {
     const savedSimulations = JSON.parse(localStorage.getItem('savedSimulations') || '[]');
@@ -167,6 +212,7 @@ export const saveSimulation = async (simulationData) => {
       savedToWebhook: webhookSuccess
     };
   } else {
+<<<<<<< HEAD
     // Retornamos sucesso mesmo com falha para não bloquear o usuário
     // Os dados estão salvos no localStorage como backup
     return {
@@ -176,51 +222,137 @@ export const saveSimulation = async (simulationData) => {
       savedToWebhook: false,
       localBackup: true
     };
+=======
+    console.error('Falha completa no salvamento da simulação');
+    throw new Error('Não foi possível salvar a simulação em nenhum dos destinos. Verifique sua conexão e tente novamente.');
+>>>>>>> f627d27145745ebfcaed14a3c39936616e88d121
   }
 };
 
-// Função para buscar cidades
+// Função para buscar cidades do Supabase
 export const getCities = async () => {
   try {
-    // Primeiro tentamos buscar do Supabase
+    // Primeiro, tentamos buscar do Supabase
     const { data, error } = await supabase
       .from('cities')
       .select('*')
       .order('name', { ascending: true });
       
     if (error) {
+<<<<<<< HEAD
       throw error;
+=======
+      console.warn('Erro ao buscar cidades do Supabase, usando dados locais:', error);
+      // Fallback para dados locais
+      return Object.keys(cityParameters).map(name => ({
+        id: name.toLowerCase().replace(/\s+/g, '-'),
+        name: name,
+        state: '',
+        country: 'Brasil',
+        ...cityParameters[name]
+      }));
+>>>>>>> f627d27145745ebfcaed14a3c39936616e88d121
     }
     
     if (data && data.length > 0) {
       return data;
-    } else {
-      throw new Error('Nenhuma cidade encontrada no Supabase');
     }
+<<<<<<< HEAD
   } catch (error) {
     // Se falhar, usamos os dados locais
+=======
+>>>>>>> f627d27145745ebfcaed14a3c39936616e88d121
     
-    // Converter o objeto cityParameters em um array de objetos de cidade
-    const cities = Object.keys(cityParameters).map(name => {
-      const params = cityParameters[name];
-      return {
-        id: name.toLowerCase().replace(/\s+/g, '-'),
-        name: name,
-        state: '', // Não temos estado nos dados locais
-        country: 'Brasil',
-        capacity: params.capacity,
-        water_flow: params.waterFlow,
-        tin: params.tin,
-        tout: params.tout,
-        average_temperature: 25, // Valor padrão
-        water_consumption_year: params.waterConsumptionYearTemp + params.waterConsumptionYearFan,
-        water_consumption_year_conventional: (params.waterConsumptionYearTemp + params.waterConsumptionYearFan) * 10, // Estimativa
-        makeup_water_fan_logic: params.makeupWaterFanLogic,
-        water_consumption_fan_logic: params.waterConsumptionFanLogic
-      };
+    // Se não houver dados no Supabase, usamos os dados locais
+    console.log('Nenhuma cidade encontrada no Supabase, usando dados locais');
+    return Object.keys(cityParameters).map(name => ({
+      id: name.toLowerCase().replace(/\s+/g, '-'),
+      name: name,
+      state: '',
+      country: 'Brasil',
+      ...cityParameters[name]
+    }));
+  } catch (error) {
+    console.error('Erro ao buscar cidades:', error);
+    // Fallback para dados locais em caso de erro
+    return Object.keys(cityParameters).map(name => ({
+      id: name.toLowerCase().replace(/\s+/g, '-'),
+      name: name,
+      state: '',
+      country: 'Brasil',
+      ...cityParameters[name]
+    }));
+  }
+};
+
+// Função para buscar cidade específica por ID
+export const getCityById = async (cityId) => {
+  try {
+    const { data, error } = await supabase
+      .from('cities')
+      .select('*')
+      .eq('id', cityId)
+      .single();
+      
+    if (error) throw error;
+    
+    return data;
+  } catch (error) {
+    console.error('Erro ao buscar cidade por ID:', error);
+    return null;
+  }
+};
+
+// Função para buscar cidade por nome
+export const getCityByName = async (cityName) => {
+  try {
+    const { data, error } = await supabase
+      .from('cities')
+      .select('*')
+      .ilike('name', cityName)
+      .single();
+      
+    if (error) throw error;
+    
+    return data;
+  } catch (error) {
+    console.error('Erro ao buscar cidade por nome:', error);
+    return null;
+  }
+};
+
+/**
+ * Busca as variáveis de cálculo do Supabase
+ * @returns {Promise} - Promessa com as variáveis de cálculo
+ */
+export const getCalculationVariables = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('calculation_variables')
+      .select('*');
+    
+    if (error) throw error;
+    
+    // Transformar o array em um objeto para facilitar o acesso
+    const variables = {};
+    data.forEach(variable => {
+      variables[variable.name] = variable.value;
     });
     
-    return cities;
+    return variables;
+  } catch (error) {
+    console.error('Erro ao buscar variáveis de cálculo:', error);
+    // Retornar valores padrão em caso de erro
+    return {
+      preco_m3_agua: 10.50,
+      tarifa_esgoto_percentual: 80.00,
+      economia_media_technologia: 37.00,
+      vida_util_equipamento: 10.00,
+      custo_implantacao_base: 5000.00,
+      custo_manutencao_anual: 200.00,
+      taxa_inflacao_anual: 3.5,
+      taxa_juros_anual: 6.00
+    };
   }
 };
 

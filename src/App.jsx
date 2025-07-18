@@ -31,6 +31,7 @@ import SkipToContent from './components/SkipToContent';
 import ImprovedStepper from './components/ImprovedStepper';
 import ResponsiveNavigation from './components/ResponsiveNavigation';
 
+<<<<<<< HEAD
 // Componente principal do Simulador
 const App = () => {
   const navigate = useNavigate();
@@ -62,11 +63,59 @@ const App = () => {
     setBudgetModalOpen,
   } = useSimulator();
 
+=======
+// Serviços
+import { getCalculationVariables, getCities, saveSimulation } from './services/simulationService';
+
+// Componente principal do Simulador
+const App = () => {
+  const navigate = useNavigate();
+  
+  // Estados principais
+  const [activeStep, setActiveStep] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+  const [cities, setCities] = useState([]);
+  const [calculationVars, setCalculationVars] = useState({});
+>>>>>>> f627d27145745ebfcaed14a3c39936616e88d121
   const [darkMode, setDarkMode] = useState(() => {
     const saved = localStorage.getItem('darkMode');
     if (saved !== null) return JSON.parse(saved);
     return window.matchMedia('(prefers-color-scheme: dark)').matches;
   });
+<<<<<<< HEAD
+=======
+  const [showSimulator, setShowSimulator] = useState(false);
+  const [simulationStarted, setSimulationStarted] = useState(false);
+  const [completedSteps, setCompletedSteps] = useState([]);
+  const [simulationCompleted, setSimulationCompleted] = useState(false);
+  const [budgetRequestData, setBudgetRequestData] = useState(null);
+  const [initialDataLoaded, setInitialDataLoaded] = useState(false);
+  
+  // Estados para notificações
+  const [notification, setNotification] = useState({
+    open: false,
+    message: '',
+    severity: 'info'
+  });
+  
+  // Estados do formulário
+  const [inputs, setInputs] = useState({
+    capacity: 500,
+    location: 'São Paulo',
+    deltaT: 6,
+    waterFlow: 71.7,
+    operatingHours: 24,
+    operatingDays: 365
+  });
+  
+  const [userData, setUserData] = useState({
+    name: '',
+    email: '',
+    company: '',
+    phone: '',
+    state: ''
+  });
+>>>>>>> f627d27145745ebfcaed14a3c39936616e88d121
 
   useEffect(() => {
     localStorage.setItem('darkMode', JSON.stringify(darkMode));
@@ -85,24 +134,26 @@ const App = () => {
         main: '#dc004e',
       },
       background: {
-        default: darkMode ? '#121212' : '#fafafa',
+        default: darkMode ? '#121212' : '#fafafa', // Fundo mais suave no light
         paper: darkMode ? '#1e1e1e' : '#ffffff'
       },
       text: {
-        primary: darkMode ? '#ffffff' : '#1a1a1a',
-        secondary: darkMode ? 'rgba(255,255,255,0.7)' : '#4a4a4a',
+        primary: darkMode ? '#ffffff' : '#1a1a1a', // Texto mais escuro no light
+        secondary: darkMode ? 'rgba(255,255,255,0.7)' : '#4a4a4a', // Texto secundário mais legível
       },
       success: {
         main: '#2e7d32',
         light: '#4caf50',
         dark: '#1b5e20'
       },
+      // Melhorar contraste para elementos de ação
       action: {
         hover: darkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
         selected: darkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)',
         disabled: darkMode ? 'rgba(255, 255, 255, 0.26)' : 'rgba(0, 0, 0, 0.26)',
         disabledBackground: darkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.12)',
       },
+      // Melhorar divisores
       divider: darkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)',
     },
     typography: {
@@ -169,6 +220,7 @@ const App = () => {
         styleOverrides: {
           root: {
             borderRadius: 12,
+            // Melhor sombra para modo light
             boxShadow: darkMode 
               ? '0 8px 32px rgba(0,0,0,0.3)' 
               : '0 2px 12px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)',
@@ -178,6 +230,7 @@ const App = () => {
       MuiCard: {
         styleOverrides: {
           root: {
+            // Melhor contraste para cards no modo light
             backgroundColor: darkMode ? '#1e1e1e' : '#ffffff',
             border: darkMode ? 'none' : '1px solid rgba(0,0,0,0.06)',
             boxShadow: darkMode 
@@ -213,6 +266,45 @@ const App = () => {
             }
           }
         }
+      },
+      MuiChip: {
+        styleOverrides: {
+          root: {
+            backgroundColor: darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)',
+            color: darkMode ? '#ffffff' : '#2c2c2c',
+            '&.MuiChip-colorPrimary': {
+              backgroundColor: darkMode ? 'rgba(25,118,210,0.3)' : 'rgba(0,51,122,0.1)',
+              color: darkMode ? '#90caf9' : '#00337A',
+            }
+          }
+        }
+      },
+      MuiAlert: {
+        styleOverrides: {
+          root: {
+            borderRadius: 8,
+          },
+          standardSuccess: {
+            backgroundColor: darkMode ? 'rgba(46,125,50,0.2)' : 'rgba(46,125,50,0.08)',
+            color: darkMode ? '#81c784' : '#2e7d32',
+            border: darkMode ? '1px solid rgba(46,125,50,0.3)' : '1px solid rgba(46,125,50,0.2)',
+          },
+          standardInfo: {
+            backgroundColor: darkMode ? 'rgba(25,118,210,0.2)' : 'rgba(25,118,210,0.08)',
+            color: darkMode ? '#90caf9' : '#1976d2',
+            border: darkMode ? '1px solid rgba(25,118,210,0.3)' : '1px solid rgba(25,118,210,0.2)',
+          },
+          standardWarning: {
+            backgroundColor: darkMode ? 'rgba(237,108,2,0.2)' : 'rgba(237,108,2,0.08)',
+            color: darkMode ? '#ffb74d' : '#ed6c02',
+            border: darkMode ? '1px solid rgba(237,108,2,0.3)' : '1px solid rgba(237,108,2,0.2)',
+          },
+          standardError: {
+            backgroundColor: darkMode ? 'rgba(211,47,47,0.2)' : 'rgba(211,47,47,0.08)',
+            color: darkMode ? '#f48fb1' : '#d32f2f',
+            border: darkMode ? '1px solid rgba(211,47,47,0.3)' : '1px solid rgba(211,47,47,0.2)',
+          }
+        }
       }
     },
     shape: {
@@ -231,6 +323,294 @@ const App = () => {
     { label: 'Obrigado', description: 'Finalização' }
   ];
 
+<<<<<<< HEAD
+=======
+  // Salvar preferência de tema
+  useEffect(() => {
+    localStorage.setItem('darkMode', JSON.stringify(darkMode));
+  }, [darkMode]);
+
+  // Carregar dados iniciais apenas uma vez
+  useEffect(() => {
+    const loadInitialData = async () => {
+      if (initialDataLoaded) return; // Evitar carregamento múltiplo
+      
+      try {
+        setIsLoading(true);
+        
+        // Carregar cidades
+        try {
+          const citiesData = await getCities();
+          setCities(citiesData || []);
+        } catch (error) {
+          console.warn('Erro ao carregar cidades:', error);
+          setCities([]);
+        }
+        
+        // Carregar variáveis de cálculo
+        try {
+          const vars = await getCalculationVariables();
+          setCalculationVars(vars || {});
+        } catch (error) {
+          console.warn('Erro ao carregar variáveis de cálculo:', error);
+          setCalculationVars({});
+        }
+        
+        setInitialDataLoaded(true);
+        
+      } catch (error) {
+        console.error('Erro ao carregar dados iniciais:', error);
+        setNotification({
+          open: true,
+          message: 'Erro ao carregar dados iniciais. Usando valores padrão.',
+          severity: 'warning'
+        });
+        setInitialDataLoaded(true); // Marcar como carregado mesmo com erro
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadInitialData();
+  }, [initialDataLoaded]);
+
+  useEffect(() => {
+    const loadCities = async () => {
+      if (!initialDataLoaded || citiesData.length > 0) return;
+      
+      try {
+        const cities = await getCities();
+        if (cities?.length > 0) {
+          setCitiesData(cities);
+          console.log('Cidades carregadas:', cities.length);
+          
+          if (inputs.location) {
+            const city = cities.find(c => 
+              c.name === inputs.location || 
+              c.name.toLowerCase() === inputs.location.toLowerCase()
+            );
+            if (city) setSelectedCity(city);
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao carregar cidades:', error);
+      }
+    };
+    
+    loadCities();
+  }, [inputs.location, initialDataLoaded, citiesData.length]);
+
+  // Função para calcular resultados baseado nos inputs
+  const calculateResults = () => {
+    const { capacity, operatingHours, operatingDays } = inputs;
+    
+    // Cálculos para DryCooler
+    const drycoolerHourlyConsumption = capacity * 0.00186; // L/h por kW
+    const drycoolerDailyConsumption = drycoolerHourlyConsumption * operatingHours;
+    const drycoolerMonthlyConsumption = drycoolerDailyConsumption * 30;
+    const drycoolerYearlyConsumption = drycoolerDailyConsumption * operatingDays;
+    
+    // Cálculos para Torre
+    const towerHourlyConsumption = capacity * 0.019; // L/h por kW
+    const towerDailyConsumption = towerHourlyConsumption * operatingHours;
+    const towerMonthlyConsumption = towerDailyConsumption * 30;
+    const towerYearlyConsumption = towerDailyConsumption * operatingDays;
+    
+    // Economia
+    const yearlyDifference = towerYearlyConsumption - drycoolerYearlyConsumption;
+    const yearlyDifferencePercentage = (yearlyDifference / towerYearlyConsumption) * 100;
+    
+    const newResults = {
+      drycooler: {
+        moduleCapacity: 168.74,
+        modules: Math.ceil(capacity / 168.74),
+        totalCapacity: Math.ceil(capacity / 168.74) * 168.74,
+        nominalWaterFlow: 24.2,
+        evaporationPercentage: 0.16,
+        evaporationFlow: 0.0387,
+        consumption: {
+          hourly: drycoolerHourlyConsumption,
+          daily: drycoolerDailyConsumption,
+          monthly: drycoolerMonthlyConsumption,
+          yearly: drycoolerYearlyConsumption
+        }
+      },
+      tower: {
+        capacity: capacity,
+        consumption: {
+          hourly: towerHourlyConsumption,
+          daily: towerDailyConsumption,
+          monthly: towerMonthlyConsumption,
+          yearly: towerYearlyConsumption
+        }
+      },
+      savings: {
+        water: { 
+          daily: towerDailyConsumption - drycoolerDailyConsumption,
+          monthly: towerMonthlyConsumption - drycoolerMonthlyConsumption,
+          yearly: yearlyDifference
+        },
+        cost: { 
+          daily: (towerDailyConsumption - drycoolerDailyConsumption) * 0.0105,
+          monthly: (towerMonthlyConsumption - drycoolerMonthlyConsumption) * 0.0105,
+          yearly: yearlyDifference * 0.0105
+        },
+        co2: { 
+          daily: (towerDailyConsumption - drycoolerDailyConsumption) * 0.00058,
+          monthly: (towerMonthlyConsumption - drycoolerMonthlyConsumption) * 0.00058,
+          yearly: yearlyDifference * 0.00058
+        }
+      },
+      comparison: {
+        yearlyDifference,
+        yearlyDifferencePercentage
+      }
+    };
+    
+    setResults(newResults);
+  };
+
+  // Recalcular quando inputs mudarem
+  useEffect(() => {
+    calculateResults();
+  }, [inputs]);
+
+  // Manipuladores de navegação melhorados
+  const handleNext = () => {
+    // Marcar etapa atual como completa
+    if (!completedSteps.includes(activeStep)) {
+      setCompletedSteps(prev => [...prev, activeStep]);
+    }
+    setActiveStep((prevStep) => prevStep + 1);
+  };
+
+  const handleBack = () => {
+    if (activeStep === 0) {
+      navigate('/');
+    } else {
+      setActiveStep((prevStep) => prevStep - 1);
+    }
+  };
+
+  const handleStartSimulation = () => {
+    setShowSimulator(true);
+    setSimulationStarted(true);
+    setActiveStep(1);
+  };
+
+  const handleRestart = () => {
+    setShowSimulator(false);
+    setSimulationStarted(false);
+    setSimulationCompleted(false);
+    setActiveStep(0);
+    setCompletedSteps([]);
+    setBudgetRequestData(null);
+    // Reset form data
+    setUserData({
+      name: '',
+      email: '',
+      company: '',
+      phone: '',
+      state: ''
+    });
+    setInputs({
+      capacity: 500,
+      location: 'São Paulo',
+      deltaT: 6,
+      waterFlow: 71.7,
+      operatingHours: 24,
+      operatingDays: 365
+    });
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setInputs(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  // CORRIGIDO: Remover auto-avanço da função handleUserDataChange
+  const handleUserDataChange = (newUserData) => {
+    setUserData(newUserData);
+    // Não fazer auto-avanço aqui - deixar o usuário clicar em "Próximo"
+  };
+
+  const handleParametersChange = (newParams) => {
+    setInputs(prev => ({
+      ...prev,
+      ...newParams
+    }));
+    // Auto-avanço após configurar parâmetros
+    setTimeout(() => handleNext(), 500);
+  };
+
+  const handleCityChange = (cityData) => {
+    setSelectedCity(cityData);
+    setInputs(prev => ({
+      ...prev,
+      location: cityData.name
+    }));
+    // Auto-avanço após selecionar cidade
+    setTimeout(() => handleNext(), 500);
+  };
+
+  const handleFinishSimulation = async () => {
+    // Abrir modal de orçamento em vez de salvar diretamente
+    setBudgetModalOpen(true);
+  };
+
+  const handleBudgetRequest = async (budgetData) => {
+    try {
+      setIsLoading(true);
+      
+      const simulationData = {
+        userData,
+        inputs,
+        results: {
+          drycooler: {
+            consumption: results.drycooler.consumption,
+            modules: results.drycooler.modules,
+            totalCapacity: results.drycooler.totalCapacity
+          },
+          tower: { consumption: results.tower.consumption },
+          comparison: {
+            yearlyDifference: results.comparison.yearlyDifference,
+            yearlyDifferencePercentage: results.comparison.yearlyDifferencePercentage
+          }
+        },
+        budgetRequest: {
+          wantsBudget: budgetData.wantsBudget,
+          additionalInfo: budgetData.additionalInfo
+        },
+        timestamp: new Date().toISOString(),
+        location: inputs.location,
+        capacity: inputs.capacity
+      };
+
+      await saveSimulation(simulationData);
+      
+      // Marcar última etapa como completa e ir para página de obrigado
+      setCompletedSteps(prev => [...prev, activeStep]);
+      setBudgetRequestData(budgetData);
+      setSimulationCompleted(true);
+      setActiveStep(5); // Ir para a página de obrigado
+      
+    } catch (error) {
+      console.error('Erro ao finalizar simulação:', error);
+      setNotification({
+        open: true,
+        message: 'Erro ao salvar a simulação. Tente novamente mais tarde.',
+        severity: 'error'
+      });
+    } finally {
+      setIsLoading(false);
+      setBudgetModalOpen(false);
+    }
+  };
+
+>>>>>>> f627d27145745ebfcaed14a3c39936616e88d121
   const renderStepContent = (step) => {
     switch (step) {
       case 0:
@@ -286,9 +666,10 @@ const App = () => {
             alignItems: 'center',
             py: 4,
             px: { xs: 2, sm: 3, md: 4 },
-            pb: { xs: 10, sm: 4 }
+            pb: { xs: 10, sm: 4 } // Espaço extra no mobile para navegação fixa
           }}
         >
+<<<<<<< HEAD
           {isLoading && (
             <LoadingSpinner 
               fullScreen 
@@ -296,6 +677,9 @@ const App = () => {
               message="Carregando dados..." 
             />
           )}
+=======
+          {isLoading && <LoadingSpinner fullScreen overlay message="Carregando dados..." />}
+>>>>>>> f627d27145745ebfcaed14a3c39936616e88d121
           
           <Paper
             elevation={darkMode ? 24 : 3}
@@ -388,15 +772,15 @@ const App = () => {
                   {activeStep < 5 && (
                     <ProgressIndicator
                       currentStep={activeStep}
-                      totalSteps={steps.length - 1}
-                      stepLabels={steps.slice(0, -1).map(s => s.label)}
+                      totalSteps={steps.length - 1} // Excluir página de obrigado do progresso
+                      stepLabels={steps.slice(0, -1).map(s => s.label)} // Excluir página de obrigado
                     />
                   )}
 
                   {activeStep < 5 && (
                     <ImprovedStepper
                       activeStep={activeStep}
-                      steps={steps.slice(0, -1)}
+                      steps={steps.slice(0, -1)} // Excluir página de obrigado
                       completedSteps={completedSteps}
                       orientation={isXs ? 'vertical' : 'horizontal'}
                     />
@@ -409,8 +793,13 @@ const App = () => {
                   {activeStep < 5 && (
                     <ResponsiveNavigation
                       activeStep={activeStep}
+<<<<<<< HEAD
                       totalSteps={steps.length - 1}
                       onBack={() => activeStep === 0 ? navigate('/') : handleBack()}
+=======
+                      totalSteps={steps.length - 1} // Excluir página de obrigado
+                      onBack={handleBack}
+>>>>>>> f627d27145745ebfcaed14a3c39936616e88d121
                       onNext={handleNext}
                       onFinish={handleFinishSimulation}
                       onHome={handleRestart}
