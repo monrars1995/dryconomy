@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router-dom';
 
 // Hooks
 import useSimulator from './hooks/useSimulator';
+import { getCities } from './services/api';
 
 // Componentes do Simulador
 import WelcomePage from './components/WelcomePage';
@@ -202,10 +203,8 @@ const App = () => {
       try {
         setIsLoading(true);
         
-        // Carregar cidades
-        const citiesResponse = await fetch('/api/cities');
-        if (!citiesResponse.ok) throw new Error('Falha ao carregar cidades');
-        const citiesData = await citiesResponse.json();
+        // Carregar cidades usando o serviço de API
+        const { data: citiesData } = await getCities();
         setCities(citiesData);
         
         // Carregar dados adicionais se necessário
@@ -216,7 +215,7 @@ const App = () => {
         console.error('Erro ao carregar dados iniciais:', error);
         setSnackbar({
           open: true,
-          message: 'Erro ao carregar dados iniciais. Tente novamente mais tarde.',
+          message: 'Erro ao carregar cidades. Verifique sua conexão e tente novamente.',
           severity: 'error'
         });
       } finally {
