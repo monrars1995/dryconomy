@@ -112,19 +112,22 @@ const CitySelectionForm = ({ cities, selectedCity, onChange, darkMode }) => {
                     }}
                   />
                 )}
-                renderOption={(props, option) => (
-                  <Box component="li" {...props}>
-                    <LocationIcon sx={{ mr: 2, color: 'primary.main' }} />
-                    <Box>
-                      <Typography variant="body1">
-                        {option.name}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {option.state}, {option.country || 'Brasil'}
-                      </Typography>
+                renderOption={(props, option) => {
+                  const { key, ...restProps } = props;
+                  return (
+                    <Box component="li" key={key} {...restProps}>
+                      <LocationIcon sx={{ mr: 2, color: 'primary.main' }} />
+                      <Box>
+                        <Typography variant="body1">
+                          {option.name}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {option.state}, {option.country || 'Brasil'}
+                        </Typography>
+                      </Box>
                     </Box>
-                  </Box>
-                )}
+                  );
+                }}
                 noOptionsText="Nenhuma cidade encontrada"
                 loadingText="Carregando cidades..."
               />

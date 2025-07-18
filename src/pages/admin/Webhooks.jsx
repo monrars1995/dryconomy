@@ -7,12 +7,13 @@ import {
   Snackbar, Tooltip, CircularProgress, Chip, Switch, FormControl,
   InputLabel, Select, FormControlLabel, InputAdornment
 } from '@mui/material';
-import {
+import { 
   Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon,
   Send as SendIcon, History as HistoryIcon, Search as SearchIcon,
   Refresh as RefreshIcon, Visibility as VisibilityIcon,
   VisibilityOff as VisibilityOffIcon, ContentCopy as ContentCopyIcon
 } from '@mui/icons-material';
+import ConfirmationDialog from '../../components/ConfirmationDialog';
 import { useAuth } from '../../hooks/useAuth';
 
 // Serviços
@@ -137,7 +138,6 @@ const Webhooks = () => {
       setConfigs(adaptedData);
       setTotalItems(count || 0);
     } catch (err) {
-      console.error('Erro ao buscar webhooks:', err);
       setError('Erro ao carregar webhooks. Tente novamente mais tarde.');
       showSnackbar('Erro ao carregar webhooks', 'error');
     } finally {
@@ -152,7 +152,6 @@ const Webhooks = () => {
       const config = await getSystemConfig();
       setGlobalWebhookEnabled(config?.webhook_enabled ?? false);
     } catch (error) {
-      console.error('Erro ao carregar configuração global do webhook:', error);
       showSnackbar('Erro ao carregar configuração global do webhook', 'error');
     }
   };
@@ -170,7 +169,6 @@ const Webhooks = () => {
         throw new Error(result.error || 'Erro desconhecido');
       }
     } catch (error) {
-      console.error('Erro ao salvar configuração global do webhook:', error);
       showSnackbar('Erro ao salvar configuração global do webhook', 'error');
       // Reverter estado em caso de erro
       setGlobalWebhookEnabled(!enabled);
@@ -313,7 +311,6 @@ const Webhooks = () => {
       await fetchWebhookConfigs();
       handleCloseDialog();
     } catch (err) {
-      console.error('Erro ao salvar webhook:', err);
       showSnackbar(err.message || 'Erro ao salvar webhook', 'error');
     } finally {
       setLoading(false);
@@ -351,7 +348,6 @@ const Webhooks = () => {
       }, 1500); // Simular um atraso de rede
       
     } catch (err) {
-      console.error('Erro ao testar webhook:', err);
       setTestResult({ success: false, message: err.message || 'Erro desconhecido ao testar webhook' });
       showSnackbar('Erro ao testar webhook', 'error');
       setTesting(false);
@@ -359,19 +355,28 @@ const Webhooks = () => {
   };
 
   // Manipulador de exclusão
-  const handleDelete = async (id) => {
-    if (!window.confirm('Tem certeza que deseja excluir este webhook?')) return;
-    
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [webhookToDelete, setWebhookToDelete] = useState(null);
+
+  const handleDeleteClick = (webhook) => {
+    setWebhookToDelete(webhook);
+    setConfirmDeleteOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!webhookToDelete) return;
+
     try {
       setLoading(true);
-      await deleteWebhookConfig(id);
+      await deleteWebhookConfig(webhookToDelete.id);
       showSnackbar('Webhook excluído com sucesso!', 'success');
       await fetchWebhookConfigs();
     } catch (err) {
-      console.error('Erro ao excluir webhook:', err);
       showSnackbar('Erro ao excluir webhook', 'error');
     } finally {
       setLoading(false);
+      setConfirmDeleteOpen(false);
+      setWebhookToDelete(null);
     }
   };
 
@@ -628,7 +633,7 @@ const Webhooks = () => {
                           </IconButton>
                         </Tooltip>
                         <Tooltip title="Excluir">
-                          <IconButton size="small" onClick={() => handleDelete(config.id)} color="error">
+                          <IconButton size="small" onClick={() => handleDeleteClick(config)} color="error">
                             <DeleteIcon fontSize="small" />
                           </IconButton>
                         </Tooltip>
@@ -821,6 +826,15 @@ const Webhooks = () => {
           {snackbar.message}
         </Alert>
       </Snackbar>
+
+      <ConfirmationDialog
+        open={confirmDeleteOpen}
+        onClose={() => setConfirmDeleteOpen(false)}
+        title="Confirmar Exclusão"
+        message={`Tem certeza que deseja excluir o webhook "${webhookToDelete?.name}"? Esta ação não pode ser desfeita.`}
+        onConfirm={handleConfirmDelete}
+        confirmText="Excluir"
+      />
     </Box>
   );
 };

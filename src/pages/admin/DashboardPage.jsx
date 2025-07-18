@@ -27,10 +27,11 @@ import {
   Timeline as TimelineIcon
 } from '@mui/icons-material';
 import { useAuth } from '../../hooks/useAuth';
-import { supabase } from '../../services/authService';
+import { getLeads } from '../../services/leadService';
+import { getSimulations } from '../../services/simulationService';
 
 // Componente de cartão de métrica melhorado
-const MetricCard = ({ title, value, icon, color, loading = false, subtitle, trend }) => {
+const MetricCard = ({ title, value, icon, color, loading = false, subtitle }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   
@@ -83,26 +84,6 @@ const MetricCard = ({ title, value, icon, color, loading = false, subtitle, tren
                   <Typography variant="body2" color="text.secondary">
                     {subtitle}
                   </Typography>
-                )}
-                {trend && (
-                  <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
-                    <TrendingUpIcon 
-                      fontSize="small" 
-                      sx={{ 
-                        color: trend > 0 ? 'success.main' : 'error.main',
-                        mr: 0.5 
-                      }} 
-                    />
-                    <Typography 
-                      variant="caption" 
-                      sx={{ 
-                        color: trend > 0 ? 'success.main' : 'error.main',
-                        fontWeight: 600 
-                      }}
-                    >
-                      {trend > 0 ? '+' : ''}{trend}% este mês
-                    </Typography>
-                  </Box>
                 )}
               </>
             )}
@@ -216,19 +197,11 @@ const DashboardPage = () => {
       setError(null);
       
       // Buscar leads
-      const { data: leads, error: leadsError } = await supabase
-        .from('leads')
-        .select('*')
-        .order('created_at', { ascending: false });
-      
+      const { data: leads, error: leadsError } = await getLeads({ perPage: 9999 }); // Buscar todos os leads
       if (leadsError) throw leadsError;
       
       // Buscar simulações
-      const { data: simulations, error: simulationsError } = await supabase
-        .from('simulations')
-        .select('*')
-        .order('created_at', { ascending: false });
-      
+      const { data: simulations, error: simulationsError } = await getSimulations({ perPage: 9999 }); // Buscar todas as simulações
       if (simulationsError) throw simulationsError;
       
       // Calcular métricas
@@ -281,7 +254,6 @@ const DashboardPage = () => {
       setRecentActivities(activities.slice(0, 5));
       
     } catch (err) {
-      console.error('Erro ao carregar dados do dashboard:', err);
       setError('Erro ao carregar dados do dashboard. Tente novamente.');
     } finally {
       setLoading(false);
@@ -356,8 +328,7 @@ const DashboardPage = () => {
             color="primary"
             loading={metrics.loading}
             subtitle="Leads capturados"
-            trend={12}
-          />
+            />
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
           <MetricCard 
@@ -367,8 +338,7 @@ const DashboardPage = () => {
             color="success"
             loading={metrics.loading}
             subtitle="Leads recentes"
-            trend={8}
-          />
+            />
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
           <MetricCard 
@@ -378,8 +348,7 @@ const DashboardPage = () => {
             color="info"
             loading={metrics.loading}
             subtitle="Total realizadas"
-            trend={15}
-          />
+            />
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
           <MetricCard 
@@ -389,8 +358,7 @@ const DashboardPage = () => {
             color="warning"
             loading={metrics.loading}
             subtitle="Potencial total"
-            trend={25}
-          />
+            />
         </Grid>
       </Grid>
 
@@ -419,7 +387,7 @@ const DashboardPage = () => {
               <Button 
                 size="small" 
                 color="primary"
-                onClick={() => window.location.href = '/admin/leads'}
+                onClick={() => navigate('/admin/leads')}
               >
                 Ver Todos
               </Button>
@@ -463,7 +431,7 @@ const DashboardPage = () => {
               </Typography>
               <LinearProgress 
                 variant="determinate" 
-                value={75} 
+                value={(metrics.waterSaved / 1000000000) * 100} 
                 sx={{ 
                   height: 8, 
                   borderRadius: 4,
@@ -474,7 +442,7 @@ const DashboardPage = () => {
                 }} 
               />
               <Typography variant="caption" color="text.secondary">
-                75% da meta anual
+                {((metrics.waterSaved / 1000000000) * 100).toFixed(1)}% da meta anual
               </Typography>
             </Box>
 
@@ -532,7 +500,7 @@ const DashboardPage = () => {
               fullWidth
               variant="outlined"
               startIcon={<PeopleIcon />}
-              onClick={() => window.location.href = '/admin/leads'}
+              onClick={() => navigate('/admin/leads')}
               sx={{ 
                 py: 1.5,
                 borderRadius: 2,
@@ -547,7 +515,7 @@ const DashboardPage = () => {
               fullWidth
               variant="outlined"
               startIcon={<AssessmentIcon />}
-              onClick={() => window.location.href = '/admin/variaveis'}
+              onClick={() => navigate('/admin/variaveis')}
               sx={{ 
                 py: 1.5,
                 borderRadius: 2,
@@ -562,7 +530,7 @@ const DashboardPage = () => {
               fullWidth
               variant="outlined"
               startIcon={<BusinessIcon />}
-              onClick={() => window.location.href = '/admin/cidades'}
+              onClick={() => navigate('/admin/cidades')}
               sx={{ 
                 py: 1.5,
                 borderRadius: 2,
@@ -577,7 +545,7 @@ const DashboardPage = () => {
               fullWidth
               variant="outlined"
               startIcon={<TrendingUpIcon />}
-              onClick={() => window.location.href = '/admin/webhooks'}
+              onClick={() => navigate('/admin/webhooks')}
               sx={{ 
                 py: 1.5,
                 borderRadius: 2,

@@ -42,6 +42,7 @@ import {
   Settings as SettingsIcon,
   TrendingUp as TrendingUpIcon
 } from '@mui/icons-material';
+import ConfirmationDialog from '../../components/ConfirmationDialog';
 import { useAuth } from '../../hooks/useAuth';
 import { 
   getCalculationVariables, 
@@ -221,26 +222,34 @@ const CalculationVariables = () => {
       await fetchVariables();
       handleCloseDialog();
     } catch (err) {
-      console.error('Erro ao salvar variável:', err);
       showSnackbar('Erro ao salvar variável', 'error');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDelete = async (id, name) => {
-    if (window.confirm(`Tem certeza que deseja excluir a variável "${name}"?`)) {
-      try {
-        setLoading(true);
-        await deleteCalculationVariable(id);
-        showSnackbar('Variável excluída com sucesso!', 'success');
-        await fetchVariables();
-      } catch (err) {
-        console.error('Erro ao excluir variável:', err);
-        showSnackbar('Erro ao excluir variável', 'error');
-      } finally {
-        setLoading(false);
-      }
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [variableToDelete, setVariableToDelete] = useState(null);
+
+  const handleDeleteClick = (variable) => {
+    setVariableToDelete(variable);
+    setConfirmDeleteOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!variableToDelete) return;
+
+    try {
+      setLoading(true);
+      await deleteCalculationVariable(variableToDelete.id);
+      showSnackbar('Variável excluída com sucesso!', 'success');
+      await fetchVariables();
+    } catch (err) {
+      showSnackbar('Erro ao excluir variável', 'error');
+    } finally {
+      setLoading(false);
+      setConfirmDeleteOpen(false);
+      setVariableToDelete(null);
     }
   };
 
@@ -520,7 +529,7 @@ const CalculationVariables = () => {
                           <Tooltip title="Excluir">
                             <IconButton 
                               color="error" 
-                              onClick={() => handleDelete(variable.id, variable.name)}
+                              onClick={() => handleDeleteClick(variable)}
                               size="small"
                             >
                               <DeleteIcon />
@@ -668,10 +677,18 @@ const CalculationVariables = () => {
           {snackbar.message}
         </Alert>
       </Snackbar>
+
+      <ConfirmationDialog
+        open={confirmDeleteOpen}
+        onClose={() => setConfirmDeleteOpen(false)}
+        title="Confirmar Exclusão"
+        message={`Tem certeza que deseja excluir a variável "${variableToDelete?.name}"? Esta ação não pode ser desfeita.`}
+        onConfirm={handleConfirmDelete}
+        confirmText="Excluir"
+      />
     </Box>
   );
 };
 
 export default CalculationVariables;
 
-export { CalculationVariables }

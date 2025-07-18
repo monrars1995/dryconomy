@@ -3,7 +3,7 @@ import {
   Box, Card, CardContent, Typography, Paper, Button, CircularProgress,
   Alert, Grid, Divider, useTheme, Snackbar, TextField, InputAdornment
 } from '@mui/material';
-import { Add as AddIcon, Refresh as RefreshIcon, Search as SearchIcon } from '@mui/icons-material';
+import { Add as AddIcon, Refresh as RefreshIcon, Search as SearchIcon, LocationCity as LocationCityIcon } from '@mui/icons-material';
 import CityList from '../../components/admin/CityList';
 import CityForm from '../../components/admin/CityForm';
 import { fetchCities } from '../../services/cityService';
@@ -32,32 +32,13 @@ const Cities = () => {
       setLoading(true);
       setError(null);
       
-      // Usar Supabase diretamente para maior controle
-      let query = supabase
-        .from('cities')
-        .select('*', { count: 'exact' });
-      
-      // Aplicar filtro de busca se fornecido
-      if (searchTerm) {
-        query = query.or(`name.ilike.%${searchTerm}%,state.ilike.%${searchTerm}%`);
-      }
-      
-      // Ordenar por nome
-      query = query.order('name', { ascending: true });
-      
-      // Aplicar paginação
-      const from = page * rowsPerPage;
-      const to = from + rowsPerPage - 1;
-      query = query.range(from, to);
-      
-      const { data, count, error } = await query;
+      const { data, count, error } = await fetchCities(page, rowsPerPage, searchTerm);
       
       if (error) throw error;
       
       setCities(data || []);
       setTotalItems(count || 0);
     } catch (err) {
-      console.error('Erro ao buscar cidades:', err);
       setError('Erro ao carregar cidades. Tente novamente mais tarde.');
     } finally {
       setLoading(false);

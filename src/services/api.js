@@ -13,14 +13,13 @@ const apiClient = axios.create({
 
 // Interceptor para logs e tratamento de erro global
 apiClient.interceptors.request.use(config => {
-  console.log(`[API] Requisição para: ${config.url}`);
+  
   return config;
 });
 
 apiClient.interceptors.response.use(
   response => response,
   error => {
-    console.error('[API] Erro na requisição:', error);
     return Promise.reject(error);
   }
 );

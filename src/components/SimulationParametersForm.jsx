@@ -29,9 +29,15 @@ const SimulationParametersForm = ({ inputs, onChange, darkMode }) => {
       [field]: error
     }));
     
-    // Se não há erro, propagar mudança
-    if (!error) {
-      onChange(newInputs);
+    // Propagar mudança apenas se o formulário inteiro for válido
+    // Isso evita que o stepper avance antes de todos os campos estarem preenchidos corretamente
+    // and ensures the parent only receives valid, complete data for this step.
+    if (!error) { // Still validate individual field
+      // Create a temporary object with the updated value to check overall form validity
+      const tempInputs = { ...newInputs };
+      if (isFormValid(tempInputs)) {
+        onChange(tempInputs);
+      }
     }
   };
 

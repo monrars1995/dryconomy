@@ -7,16 +7,55 @@
 import { createClient } from '@supabase/supabase-js';
 
 // Configuração do cliente Supabase
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://your-supabase-url.supabase.co';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'your-anon-key';
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: true
-  }
-});
+// Validação das variáveis de ambiente
+if (!supabaseUrl || supabaseUrl.includes('your-supabase-url')) {
+  console.error('Erro: VITE_SUPABASE_URL não configurado corretamente no arquivo .env');
+  console.error('Por favor, verifique o arquivo .env e certifique-se de que todas as variáveis necessárias estão definidas.');
+  console.error('Consulte o README.md para obter instruções de configuração.');
+}
+
+if (!supabaseAnonKey || supabaseAnonKey.includes('your-anon-key')) {
+  console.error('Erro: VITE_SUPABASE_ANON_KEY não configurado corretamente no arquivo .env');
+  console.error('Por favor, verifique o arquivo .env e certifique-se de que todas as variáveis necessárias estão definidas.');
+  console.error('Consulte o README.md para obter instruções de configuração.');
+}
+
+// Inicializa o cliente Supabase
+let supabaseClient;
+
+try {
+  supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true
+    }
+  });
+} catch (error) {
+  console.error('Erro ao inicializar o cliente Supabase:', error.message);
+  console.error('Por favor, verifique suas credenciais do Supabase no arquivo .env');
+  
+  // Cria um cliente falso para evitar erros em tempo de execução
+  supabaseClient = {
+    auth: {
+      signInWithPassword: () => Promise.reject(new Error('Cliente Supabase não inicializado')),
+      signOut: () => Promise.reject(new Error('Cliente Supabase não inicializado')),
+      onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
+      getSession: () => Promise.resolve({ data: { session: null }, error: new Error('Cliente Supabase não inicializado') })
+    },
+    from: () => ({
+      select: () => Promise.reject(new Error('Cliente Supabase não inicializado')),
+      update: () => Promise.reject(new Error('Cliente Supabase não inicializado')),
+      insert: () => Promise.reject(new Error('Cliente Supabase não inicializado')),
+      delete: () => Promise.reject(new Error('Cliente Supabase não inicializado'))
+    })
+  };
+}
+
+export const supabase = supabaseClient;
 
 /**
  * Função para realizar login de usuário
@@ -52,7 +91,6 @@ export const login = async (email, password) => {
     
     return { user: { ...data.user, role: profile?.role || 'user', fullName: profile?.full_name || 'Usuário' } };
   } catch (error) {
-    console.error('Erro ao fazer login:', error);
     throw error;
   }
 };
@@ -63,7 +101,6 @@ export const login = async (email, password) => {
 export const logout = async () => {
   const { error } = await supabase.auth.signOut();
   if (error) {
-    console.error('Erro ao fazer logout:', error);
     throw error;
   }
   
@@ -81,7 +118,6 @@ export const isAuthenticated = async () => {
     const { data } = await supabase.auth.getSession();
     return !!data.session;
   } catch (error) {
-    console.error('Erro ao verificar autenticação:', error);
     return false;
   }
 };
@@ -96,7 +132,6 @@ export const getAuthToken = async () => {
     const { data } = await supabase.auth.getSession();
     return data.session?.access_token || null;
   } catch (error) {
-    console.error('Erro ao obter token de autenticação:', error);
     return null;
   }
 };
@@ -174,7 +209,6 @@ export const signUp = async (email, password, userData) => {
     
     return data;
   } catch (error) {
-    console.error('Erro ao registrar usuário:', error);
     throw error;
   }
 };
@@ -191,7 +225,6 @@ export const resetPassword = async (email) => {
     if (error) throw error;
     return { success: true };
   } catch (error) {
-    console.error('Erro ao redefinir senha:', error);
     throw error;
   }
 };
@@ -224,7 +257,6 @@ export const updateUserProfile = async (userId, updates) => {
     
     return data;
   } catch (error) {
-    console.error('Erro ao atualizar perfil:', error);
     throw error;
   }
 };

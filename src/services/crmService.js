@@ -29,7 +29,6 @@ export const submitLeadToRamper = async (leadData) => {
 
     return await response.json();
   } catch (error) {
-    console.error('Error submitting lead to CRM:', error);
     throw error;
   }
 };
@@ -47,7 +46,6 @@ export const saveCalculationHistory = async (calculationData) => {
     localStorage.setItem('calculationHistory', JSON.stringify(history));
     return true;
   } catch (error) {
-    console.error('Error saving calculation history:', error);
     return false;
   }
 };
@@ -57,7 +55,6 @@ export const getCalculationHistory = () => {
   try {
     return JSON.parse(localStorage.getItem('calculationHistory') || '[]');
   } catch (error) {
-    console.error('Error retrieving calculation history:', error);
     return [];
   }
 };

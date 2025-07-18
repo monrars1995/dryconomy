@@ -147,15 +147,15 @@ const AccessibilityHelper = () => {
       </Fade>
 
       {/* Estilos CSS para alto contraste */}
-      <style jsx global>{`
-        .high-contrast {
+      <style jsx="true" global="true">{
+        `.high-contrast {
           filter: contrast(150%) brightness(120%);
         }
         .high-contrast * {
           text-shadow: none !important;
           box-shadow: none !important;
-        }
-      `}</style>
+        }`
+      }</style>
     </>
   );
 };

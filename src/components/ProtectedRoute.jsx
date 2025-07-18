@@ -15,7 +15,7 @@ const ProtectedRoute = () => {
         // Aguardar um pouco para garantir que o estado seja atualizado
         await new Promise(resolve => setTimeout(resolve, 500));
       } catch (error) {
-        console.error('Erro ao verificar autenticação:', error);
+        
       } finally {
         setIsCheckingAuth(false);
       }
@@ -52,7 +52,14 @@ const ProtectedRoute = () => {
   
   // Se não estiver autenticado, redireciona para a página de login
   if (!isAuthenticated || !user) {
-    console.log('ProtectedRoute: Usuário não autenticado, redirecionando para /login');
+    
+    
+    
+    // Forçar redirecionamento com delay zero para garantir que ocorra
+    setTimeout(() => {
+      window.location.href = '/login';
+    }, 0);
+    
     return <Navigate to="/login" state={{ from: location.pathname }} replace />;
   }
 

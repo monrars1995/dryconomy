@@ -40,7 +40,7 @@ const Login = () => {
   // Efeito para redirecionar se o usuário já estiver autenticado
   useEffect(() => {
     if (isAuthenticated && user) {
-      console.log('Login.jsx: Usuário autenticado, redirecionando...', { user });
+      
       navigate(from);
     }
   }, [isAuthenticated, user, navigate, from]);
@@ -66,9 +66,8 @@ const Login = () => {
       }
       
       // O redirecionamento será tratado pelo useEffect quando isAuthenticated mudar
-      console.log('Login.jsx handleSubmit: Login bem-sucedido, aguardando redirecionamento...');
+      
     } catch (err) {
-      console.error('Erro no login:', err);
       setError('E-mail ou senha inválidos');
     } finally {
       setLoading(false);

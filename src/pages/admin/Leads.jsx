@@ -225,45 +225,28 @@ const Leads = () => {
   return (
     <Box>
       {/* Header */}
-      <Paper sx={{ p: 3, mb: 3, borderRadius: 3 }}>
-        <Grid container spacing={2} justifyContent="space-between" alignItems="center">
-          <Grid item>
-            <Typography variant="h5" component="h1" sx={{ 
-              fontWeight: 700,
-              color: 'primary.main',
-              display: 'flex',
-              alignItems: 'center'
-            }}>
-              <PersonIcon sx={{ mr: 1 }} />
-              Gerenciar Leads
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Visualize e gerencie todos os leads capturados pelo simulador
-            </Typography>
-          </Grid>
-          <Grid item>
-            <Box sx={{ display: 'flex', gap: 1 }}>
-              <Button
-                variant="outlined"
-                startIcon={<DownloadIcon />}
-                sx={{ borderRadius: 2 }}
-              >
-                Exportar
-              </Button>
-              <Button
-                variant="outlined"
-                color="primary"
-                startIcon={<RefreshIcon />}
-                onClick={fetchLeads}
-                disabled={loading}
-                sx={{ borderRadius: 2 }}
-              >
-                Atualizar
-              </Button>
-            </Box>
-          </Grid>
-        </Grid>
-      </Paper>
+      <Box sx={{ mb: 3, display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'stretch', sm: 'center' } }}>
+        <Box sx={{ mb: { xs: 2, sm: 0 } }}>
+          <Typography variant="h5" component="h1" gutterBottom sx={{ color: '#00337A' }}>
+            <PersonIcon sx={{ mr: 1, verticalAlign: 'bottom', color: '#00337A' }} />
+            Gerenciar Leads
+          </Typography>
+          <Typography variant="body2" sx={{ color: '#555555', fontWeight: 500 }}>
+            Visualize e gerencie todos os leads capturados pelo simulador
+          </Typography>
+        </Box>
+
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <Button
+            variant="outlined"
+            startIcon={<RefreshIcon />}
+            onClick={fetchLeads}
+            sx={{ borderRadius: 2 }}
+          >
+            Atualizar
+          </Button>
+        </Box>
+      </Box>
 
       {/* Estatísticas */}
       <Grid container spacing={3} sx={{ mb: 3 }}>

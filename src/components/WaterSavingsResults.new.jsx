@@ -1,15 +1,5 @@
 import React from 'react';
-import { 
-  Box, 
-  Typography, 
-  useTheme, 
-  useMediaQuery, 
-  CircularProgress 
-} from '@mui/material';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-
-// Importar o componente WaterDropSVG do arquivo dedicado
-import WaterDropSVG from './WaterDropSVG';
+import { Box, Typography, useTheme, useMediaQuery } from '@mui/material';
 
 // Funções auxiliares para tratamento seguro de valores
 const safeNumber = (value, defaultValue = 0) => {
@@ -39,54 +29,12 @@ const formatPercentage = (value) => {
   return `${num.toFixed(2)}%`;
 };
 
-const WaterSavingsResults = ({ results = {}, darkMode = false, isLoading = false }) => {
+const WaterSavingsResults = ({ results = {}, darkMode = false }) => {
   console.log('Rendering WaterSavingsResults with results:', results);
-  const theme = useTheme();
-  const isXs = useMediaQuery('(max-width:600px)');
-  
-  // Check if results are empty or loading
-  const isEmpty = Object.keys(results).length === 0;
-  
-  if (isLoading) {
-    return (
-      <Box sx={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        minHeight: 300,
-        p: 4,
-        textAlign: 'center'
-      }}>
-        <CircularProgress />
-        <Typography variant="h6" sx={{ ml: 2 }}>Carregando resultados...</Typography>
-      </Box>
-    );
-  }
-  
-  if (isEmpty) {
-    return (
-      <Box sx={{ 
-        p: 4, 
-        textAlign: 'center',
-        bgcolor: darkMode ? 'background.paper' : 'grey.50',
-        borderRadius: 2,
-        boxShadow: 1,
-        maxWidth: 800,
-        mx: 'auto',
-        my: 4
-      }}>
-        <WaterDropSVG sx={{ fontSize: 60, color: 'primary.main', mb: 2 }} />
-        <Typography variant="h6" gutterBottom>
-          Nenhum resultado disponível
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-          Realize uma simulação para visualizar os resultados de economia de água.
-        </Typography>
-      </Box>
-    );
-  }
   
   try {
+    const theme = useTheme();
+    const isXs = useMediaQuery('(max-width:600px)');
     const isSm = useMediaQuery('(max-width:960px)');
     const isMd = useMediaQuery('(max-width:1280px)');
     

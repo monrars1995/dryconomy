@@ -3,10 +3,13 @@ import react from '@vitejs/plugin-react'
 import path from 'path'
 
 export default defineConfig({
+  base: './',
   plugins: [react()],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      // Add this to ensure src is properly resolved
+      '/src': path.resolve(__dirname, './src')
     }
   },
   build: {
@@ -18,7 +21,8 @@ export default defineConfig({
         manualChunks: {
           vendor: ['react', 'react-dom', 'react-router-dom'],
           material: ['@mui/material', '@mui/icons-material'],
-          charts: ['recharts']
+          charts: ['recharts'],
+          supabase: ['@supabase/supabase-js']
         }
       }
     }

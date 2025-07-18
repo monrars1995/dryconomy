@@ -21,17 +21,20 @@ import {
   Tooltip,
   CircularProgress,
   Collapse,
-  ListItemButton
+  ListItemButton,
+  ThemeProvider
 } from '@mui/material';
+import adminTheme from '../../theme/adminTheme';
 import {
+  Assessment as AssessmentIcon,
+  People as PeopleIcon,
+  LocationCity as LocationCityIcon,
+  Webhook as WebhookIcon,
   Menu as MenuIcon,
   Settings as SettingsIcon,
-  People as PeopleIcon,
   Dashboard as DashboardIcon,
-  Webhook as WebhookIcon,
   Logout as LogoutIcon,
   AccountCircle as AccountCircleIcon,
-  LocationCity as LocationCityIcon,
   ExpandLess as ExpandLessIcon,
   ExpandMore as ExpandMoreIcon,
   ChevronLeft as ChevronLeftIcon,
@@ -70,6 +73,12 @@ const AdminLayout = () => {
       icon: <PeopleIcon />, 
       path: '/admin/leads',
       active: location.pathname === '/admin/leads'
+    },
+    { 
+      text: 'Simulações', 
+      icon: <AssessmentIcon />, 
+      path: '/admin/simulacoes',
+      active: location.pathname === '/admin/simulacoes'
     },
     { 
       text: 'Cidades', 
@@ -351,16 +360,17 @@ const AdminLayout = () => {
   }
 
   return (
-    <Box sx={{ display: 'flex' }}>
-      <AppBar
-        position="fixed"
-        sx={{
-          width: { sm: `calc(100% - ${DRAWER_WIDTH}px)` },
-          ml: { sm: `${DRAWER_WIDTH}px` },
-          bgcolor: '#00337A',
-          boxShadow: 3
-        }}
-      >
+    <ThemeProvider theme={adminTheme}>
+      <Box sx={{ display: 'flex' }}>
+        <AppBar
+          position="fixed"
+          sx={{
+            width: { sm: `calc(100% - ${DRAWER_WIDTH}px)` },
+            ml: { sm: `${DRAWER_WIDTH}px` },
+            bgcolor: '#00337A',
+            boxShadow: 3
+          }}
+        >
         <Toolbar>
           <IconButton
             color="inherit"
@@ -463,7 +473,8 @@ const AdminLayout = () => {
         </Paper>
       </Box>
     </Box>
+  </ThemeProvider>
   );
-};
+}
 
 export default AdminLayout;

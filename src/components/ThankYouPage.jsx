@@ -20,7 +20,7 @@ const ThankYouPage = ({ userData, simulationResults, budgetRequested, onRestart,
 
   const handleDownloadReport = () => {
     // Implementar download do relatório em PDF
-    console.log('Download do relatório solicitado');
+    
   };
 
   const handleShareWhatsApp = () => {

@@ -52,7 +52,6 @@ export const getWebhookConfigs = async (options = {}) => {
       error: null
     };
   } catch (error) {
-    console.error('Erro ao buscar configurações de webhook:', error);
     return {
       data: [],
       totalCount: 0,
@@ -103,7 +102,6 @@ export const getWebhookLogs = async (configId, options = {}) => {
       error: null
     };
   } catch (error) {
-    console.error('Erro ao buscar logs de webhook:', error);
     return {
       data: [],
       total: 0,
@@ -135,7 +133,6 @@ export const createWebhookConfig = async (config) => {
 
     return { data: formattedData, error: null };
   } catch (error) {
-    console.error('Erro ao criar configuração de webhook:', error);
     return { data: null, error };
   }
 };
@@ -164,7 +161,6 @@ export const updateWebhookConfig = async (id, config) => {
 
     return { data: formattedData, error: null };
   } catch (error) {
-    console.error('Erro ao atualizar configuração de webhook:', error);
     return { data: null, error };
   }
 };
@@ -185,7 +181,6 @@ export const deleteWebhookConfig = async (id) => {
 
     return { success: true, error: null };
   } catch (error) {
-    console.error('Erro ao excluir configuração de webhook:', error);
     return { success: false, error };
   }
 };
@@ -238,7 +233,6 @@ export const testWebhook = async (id) => {
 
     return { data: testResult, error: null };
   } catch (error) {
-    console.error('Erro ao testar webhook:', error);
     return { data: null, error };
   }
 };

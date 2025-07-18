@@ -31,7 +31,6 @@ export const fetchCities = async (page = 0, pageSize = 10, searchTerm = '') => {
 
     return { data, count, error };
   } catch (error) {
-    console.error('Erro ao buscar cidades:', error);
     return { data: [], count: 0, error };
   }
 };
@@ -51,7 +50,6 @@ export const getCityById = async (cityId) => {
 
     return { data, error };
   } catch (error) {
-    console.error('Erro ao buscar cidade por ID:', error);
     return { data: null, error };
   }
 };
@@ -70,7 +68,6 @@ export const addCity = async (cityData) => {
 
     return { data: data?.[0], error };
   } catch (error) {
-    console.error('Erro ao adicionar cidade:', error);
     return { data: null, error };
   }
 };
@@ -97,7 +94,6 @@ export const updateCity = async (cityId, cityData) => {
 
     return { data: data?.[0], error };
   } catch (error) {
-    console.error('Erro ao atualizar cidade:', error);
     return { data: null, error };
   }
 };
@@ -116,7 +112,6 @@ export const deleteCity = async (cityId) => {
 
     return { error };
   } catch (error) {
-    console.error('Erro ao remover cidade:', error);
     return { error };
   }
 };
@@ -136,7 +131,6 @@ export const getAllCities = async () => {
     
     return data || [];
   } catch (error) {
-    console.error('Erro ao buscar todas as cidades:', error);
     return [];
   }
 };

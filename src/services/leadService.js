@@ -77,7 +77,6 @@ export const getLeads = async ({
       totalPages: Math.ceil((count || 0) / perPage)
     };
   } catch (error) {
-    console.error('Erro ao buscar leads:', error);
     throw error;
   }
 };
@@ -98,7 +97,6 @@ export const getLeadSimulations = async (leadId) => {
     if (error) throw error;
     return data || [];
   } catch (error) {
-    console.error(`Erro ao buscar simulações do lead ${leadId}:`, error);
     throw error;
   }
 };
@@ -119,7 +117,6 @@ export const createLead = async (leadData) => {
     if (error) throw error;
     return data;
   } catch (error) {
-    console.error('Erro ao criar lead:', error);
     throw error;
   }
 };
@@ -147,7 +144,6 @@ export const deleteLead = async (leadId) => {
 
     if (error) throw error;
   } catch (error) {
-    console.error(`Erro ao excluir lead ${leadId}:`, error);
     throw error;
   }
 };
@@ -168,7 +164,6 @@ export const getLeadById = async (leadId) => {
     if (error) throw error;
     return data;
   } catch (error) {
-    console.error(`Erro ao buscar lead ${leadId}:`, error);
     throw error;
   }
 };
@@ -191,7 +186,6 @@ export const updateLead = async (leadId, updates) => {
     if (error) throw error;
     return data;
   } catch (error) {
-    console.error(`Erro ao atualizar lead ${leadId}:`, error);
     throw error;
   }
 };

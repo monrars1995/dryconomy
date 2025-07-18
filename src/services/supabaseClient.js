@@ -12,7 +12,6 @@ export const getSystemConfig = async () => {
     if (error) throw error;
     return data || { webhook_enabled: false };
   } catch (error) {
-    console.error('Erro ao buscar configuração do sistema:', error);
     return { webhook_enabled: false };
   }
 };
@@ -29,7 +28,6 @@ export const updateSystemConfig = async (config) => {
     if (error) throw error;
     return { success: true, data };
   } catch (error) {
-    console.error('Erro ao atualizar configuração do sistema:', error);
     return { success: false, error: error.message };
   }
 };

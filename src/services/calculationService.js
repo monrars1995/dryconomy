@@ -15,7 +15,6 @@ export const getCalculationVariables = async () => {
     if (error) throw error;
     return data || [];
   } catch (error) {
-    console.error('Erro ao buscar variáveis de cálculo:', error);
     throw error;
   }
 };
@@ -43,7 +42,6 @@ export const updateCalculationVariable = async (id, updates, userId) => {
     if (error) throw error;
     return data;
   } catch (error) {
-    console.error('Erro ao atualizar variável de cálculo:', error);
     throw error;
   }
 };
@@ -71,7 +69,6 @@ export const createCalculationVariable = async (variableData, userId) => {
     if (error) throw error;
     return data;
   } catch (error) {
-    console.error('Erro ao criar variável de cálculo:', error);
     throw error;
   }
 };
@@ -90,7 +87,6 @@ export const deleteCalculationVariable = async (id) => {
 
     if (error) throw error;
   } catch (error) {
-    console.error('Erro ao excluir variável de cálculo:', error);
     throw error;
   }
 };
@@ -111,7 +107,6 @@ export const getVariablesByCategory = async (category) => {
     if (error) throw error;
     return data || [];
   } catch (error) {
-    console.error(`Erro ao buscar variáveis da categoria ${category}:`, error);
     throw error;
   }
 };
@@ -132,7 +127,6 @@ export const getCalculationVariableById = async (id) => {
     if (error) throw error;
     return data;
   } catch (error) {
-    console.error(`Erro ao buscar variável com ID ${id}:`, error);
     throw error;
   }
 };

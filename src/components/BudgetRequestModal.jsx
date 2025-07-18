@@ -52,7 +52,7 @@ const BudgetRequestModal = ({ open, onClose, userData, simulationResults, onSubm
       }, 3000);
       
     } catch (error) {
-      console.error('Erro ao enviar solicitação:', error);
+      
     } finally {
       setLoading(false);
     }

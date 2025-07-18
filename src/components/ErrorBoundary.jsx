@@ -19,7 +19,7 @@ class ErrorBoundary extends React.Component {
     });
     
     // Log do erro para monitoramento
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
+    
   }
 
   handleReload = () => {

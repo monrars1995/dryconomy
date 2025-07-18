@@ -16,10 +16,23 @@ import CalculationVariables from './pages/admin/CalculationVariables';
 import Cities from './pages/admin/Cities';
 import Leads from './pages/admin/Leads';
 import Webhooks from './pages/admin/Webhooks';
+import SimulationsPanel from './pages/admin/SimulationsPanel';
 import NotFound from './pages/NotFound';
 
 // Components
 import ProtectedRoute from './components/ProtectedRoute';
+import { useAuth } from './hooks/useAuth';
+
+// Componente AdminRoute para força redirecionamento para login
+const AdminRoute = ({ children }) => {
+  const { isAuthenticated } = useAuth();
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return children;
+};
 
 // Theme
 const theme = createTheme({
@@ -79,15 +92,14 @@ const AppRoutes = () => {
             <Route path="/login" element={<Login />} />
             
             {/* Rotas Protegidas - Admin */}
-            <Route element={<ProtectedRoute />}>
-              <Route element={<AdminLayout />}>
-                <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
-                <Route path="/admin/dashboard" element={<DashboardPage />} />
-                <Route path="/admin/variaveis" element={<CalculationVariables />} />
-                <Route path="/admin/cidades" element={<Cities />} />
-                <Route path="/admin/leads" element={<Leads />} />
-                <Route path="/admin/webhooks" element={<Webhooks />} />
-              </Route>
+            <Route path="/admin" element={<AdminRoute><Navigate to="/admin/dashboard" replace /></AdminRoute>} />
+            <Route path="/admin/*" element={<AdminRoute><AdminLayout /></AdminRoute>}>
+              <Route path="dashboard" element={<DashboardPage />} />
+              <Route path="variaveis" element={<CalculationVariables />} />
+              <Route path="cidades" element={<Cities />} />
+              <Route path="leads" element={<Leads />} />
+              <Route path="simulacoes" element={<SimulationsPanel />} />
+              <Route path="webhooks" element={<Webhooks />} />
             </Route>
             
             {/* Rota 404 */}

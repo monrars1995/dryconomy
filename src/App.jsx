@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Container, Paper, Typography, Box, Button, 
-  CircularProgress, Snackbar, Alert,
+  Paper, Typography, Box, Button, 
+  Snackbar, Alert,
   createTheme, ThemeProvider, useMediaQuery, IconButton
 } from '@mui/material';
 import { 
-  LightMode, DarkMode, Home, Send 
+  LightMode, DarkMode, Home 
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
+
+// Hooks
+import useSimulator from './hooks/useSimulator';
 
 // Componentes do Simulador
 import WelcomePage from './components/WelcomePage';
@@ -28,99 +31,49 @@ import SkipToContent from './components/SkipToContent';
 import ImprovedStepper from './components/ImprovedStepper';
 import ResponsiveNavigation from './components/ResponsiveNavigation';
 
-// Serviços
-import { getCities, saveSimulation } from './services/simulationService';
-
 // Componente principal do Simulador
 const App = () => {
   const navigate = useNavigate();
-  
-  // Estados principais
-  const [activeStep, setActiveStep] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
-  const [cities, setCities] = useState([]);
+  const {
+    activeStep,
+    isLoading,
+    cities,
+    showSimulator,
+    simulationStarted,
+    completedSteps,
+    budgetRequestData,
+    notification,
+    inputs,
+    userData,
+    results,
+    selectedCity,
+    budgetModalOpen,
+    handleNext,
+    handleBack,
+    handleStartSimulation,
+    handleRestart,
+    handleUserDataChange,
+    handleParametersChange,
+    handleCityChange,
+    handleFinishSimulation,
+    handleBudgetRequest,
+    canProceed,
+    setNotification,
+    setBudgetModalOpen,
+  } = useSimulator();
+
   const [darkMode, setDarkMode] = useState(() => {
-    // Verificar preferência salva ou preferência do sistema
     const saved = localStorage.getItem('darkMode');
     if (saved !== null) return JSON.parse(saved);
     return window.matchMedia('(prefers-color-scheme: dark)').matches;
   });
-  const [showSimulator, setShowSimulator] = useState(false);
-  const [simulationStarted, setSimulationStarted] = useState(false);
-  const [completedSteps, setCompletedSteps] = useState([]);
-  const [simulationCompleted, setSimulationCompleted] = useState(false);
-  const [budgetRequestData, setBudgetRequestData] = useState(null);
-  
-  // Estados para notificações
-  const [notification, setNotification] = useState({
-    open: false,
-    message: '',
-    severity: 'info'
-  });
-  
-  // Estados do formulário
-  const [inputs, setInputs] = useState({
-    capacity: 500,
-    location: 'São Paulo',
-    deltaT: 6,
-    waterFlow: 71.7,
-    operatingHours: 24,
-    operatingDays: 365
-  });
-  
-  const [userData, setUserData] = useState({
-    name: '',
-    email: '',
-    company: '',
-    phone: '',
-    state: ''
-  });
 
-  // Estados para resultados - com valores calculados dinamicamente
-  const [results, setResults] = useState({
-    drycooler: {
-      moduleCapacity: 168.74,
-      modules: 3,
-      totalCapacity: 506.22,
-      nominalWaterFlow: 24.2,
-      evaporationPercentage: 0.16,
-      evaporationFlow: 0.0387,
-      consumption: { 
-        hourly: 0.93, 
-        daily: 22.32, 
-        monthly: 669.6, 
-        yearly: 8035.2 
-      }
-    },
-    tower: {
-      capacity: 500,
-      consumption: { 
-        hourly: 9.5, 
-        daily: 228, 
-        monthly: 6840, 
-        yearly: 82080 
-      }
-    },
-    savings: {
-      water: { daily: 205.68, monthly: 6170.4, yearly: 74044.8 },
-      cost: { daily: 2.16, monthly: 64.79, yearly: 777.47 },
-      co2: { daily: 0.12, monthly: 3.59, yearly: 43.06 }
-    },
-    comparison: {
-      yearlyDifference: 74044.8,
-      yearlyDifferencePercentage: 90.21
-    }
-  });
+  useEffect(() => {
+    localStorage.setItem('darkMode', JSON.stringify(darkMode));
+  }, [darkMode]);
 
-  const [citiesData, setCitiesData] = useState([]);
-  const [selectedCity, setSelectedCity] = useState(null);
-
-  // Estados para o modal de orçamento
-  const [budgetModalOpen, setBudgetModalOpen] = useState(false);
-
-  // Configurações de tema melhoradas - FOCO NA LEGIBILIDADE DO MODO LIGHT
   const theme = createTheme({
-    palette: {
+        palette: {
       mode: darkMode ? 'dark' : 'light',
       primary: {
         main: '#00337A',
@@ -267,12 +220,8 @@ const App = () => {
     }
   });
 
-  // Hooks de media query
   const isXs = useMediaQuery('(max-width:600px)');
-  const isSm = useMediaQuery('(max-width:960px)');
-  const isMd = useMediaQuery('(max-width:1280px)');
 
-  // Constantes melhoradas - CORRIGIDO: 6 etapas (incluindo página de obrigado)
   const steps = [
     { label: 'Início', description: 'Bem-vindo ao simulador' },
     { label: 'Dados Pessoais', description: 'Suas informações de contato' },
@@ -281,267 +230,6 @@ const App = () => {
     { label: 'Resultados', description: 'Análise de economia' },
     { label: 'Obrigado', description: 'Finalização' }
   ];
-
-  // Salvar preferência de tema
-  useEffect(() => {
-    localStorage.setItem('darkMode', JSON.stringify(darkMode));
-  }, [darkMode]);
-
-  // Carregar dados iniciais apenas uma vez
-  useEffect(() => {
-    let isMounted = true;
-    
-    const loadInitialData = async () => {
-      try {
-        setIsLoading(true);
-        
-        // Carregar cidades
-        const citiesData = await getCities();
-        
-        if (isMounted) {
-          setCities(citiesData);
-          setCitiesData(citiesData);
-          
-          // Se há uma localização selecionada, encontrar a cidade correspondente
-          if (inputs.location && citiesData?.length > 0) {
-            const city = citiesData.find(c => 
-              c.name === inputs.location || 
-              c.name.toLowerCase() === inputs.location.toLowerCase()
-            );
-            if (city) setSelectedCity(city);
-          }
-        }
-        
-      } catch (error) {
-        console.error('Erro ao carregar dados iniciais:', error);
-        if (isMounted) {
-          setNotification({
-            open: true,
-            message: 'Erro ao carregar dados iniciais. Usando valores padrão.',
-            severity: 'warning'
-          });
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-      }
-    };
-    
-    loadInitialData();
-    
-    return () => {
-      isMounted = false;
-    };
-  }, []); // Dependências vazias para executar apenas uma vez
-
-  // Função para calcular resultados baseado nos inputs
-  const calculateResults = () => {
-    const { capacity, operatingHours, operatingDays } = inputs;
-    
-    // Cálculos para DryCooler
-    const drycoolerHourlyConsumption = capacity * 0.00186; // L/h por kW
-    const drycoolerDailyConsumption = drycoolerHourlyConsumption * operatingHours;
-    const drycoolerMonthlyConsumption = drycoolerDailyConsumption * 30;
-    const drycoolerYearlyConsumption = drycoolerDailyConsumption * operatingDays;
-    
-    // Cálculos para Torre
-    const towerHourlyConsumption = capacity * 0.019; // L/h por kW
-    const towerDailyConsumption = towerHourlyConsumption * operatingHours;
-    const towerMonthlyConsumption = towerDailyConsumption * 30;
-    const towerYearlyConsumption = towerDailyConsumption * operatingDays;
-    
-    // Economia
-    const yearlyDifference = towerYearlyConsumption - drycoolerYearlyConsumption;
-    const yearlyDifferencePercentage = (yearlyDifference / towerYearlyConsumption) * 100;
-    
-    const newResults = {
-      drycooler: {
-        moduleCapacity: 168.74,
-        modules: Math.ceil(capacity / 168.74),
-        totalCapacity: Math.ceil(capacity / 168.74) * 168.74,
-        nominalWaterFlow: 24.2,
-        evaporationPercentage: 0.16,
-        evaporationFlow: 0.0387,
-        consumption: {
-          hourly: drycoolerHourlyConsumption,
-          daily: drycoolerDailyConsumption,
-          monthly: drycoolerMonthlyConsumption,
-          yearly: drycoolerYearlyConsumption
-        }
-      },
-      tower: {
-        capacity: capacity,
-        consumption: {
-          hourly: towerHourlyConsumption,
-          daily: towerDailyConsumption,
-          monthly: towerMonthlyConsumption,
-          yearly: towerYearlyConsumption
-        }
-      },
-      savings: {
-        water: { 
-          daily: towerDailyConsumption - drycoolerDailyConsumption,
-          monthly: towerMonthlyConsumption - drycoolerMonthlyConsumption,
-          yearly: yearlyDifference
-        },
-        cost: { 
-          daily: (towerDailyConsumption - drycoolerDailyConsumption) * 0.0105,
-          monthly: (towerMonthlyConsumption - drycoolerMonthlyConsumption) * 0.0105,
-          yearly: yearlyDifference * 0.0105
-        },
-        co2: { 
-          daily: (towerDailyConsumption - drycoolerDailyConsumption) * 0.00058,
-          monthly: (towerMonthlyConsumption - drycoolerMonthlyConsumption) * 0.00058,
-          yearly: yearlyDifference * 0.00058
-        }
-      },
-      comparison: {
-        yearlyDifference,
-        yearlyDifferencePercentage
-      }
-    };
-    
-    setResults(newResults);
-  };
-
-  // Recalcular quando inputs mudarem
-  useEffect(() => {
-    calculateResults();
-  }, [inputs]);
-
-  // Manipuladores de navegação melhorados
-  const handleNext = () => {
-    // Marcar etapa atual como completa
-    if (!completedSteps.includes(activeStep)) {
-      setCompletedSteps(prev => [...prev, activeStep]);
-    }
-    setActiveStep((prevStep) => prevStep + 1);
-  };
-
-  const handleBack = () => {
-    if (activeStep === 0) {
-      navigate('/');
-    } else {
-      setActiveStep((prevStep) => prevStep - 1);
-    }
-  };
-
-  const handleStartSimulation = () => {
-    setShowSimulator(true);
-    setSimulationStarted(true);
-    setActiveStep(1);
-  };
-
-  const handleRestart = () => {
-    setShowSimulator(false);
-    setSimulationStarted(false);
-    setSimulationCompleted(false);
-    setActiveStep(0);
-    setCompletedSteps([]);
-    setBudgetRequestData(null);
-    // Reset form data
-    setUserData({
-      name: '',
-      email: '',
-      company: '',
-      phone: '',
-      state: ''
-    });
-    setInputs({
-      capacity: 500,
-      location: 'São Paulo',
-      deltaT: 6,
-      waterFlow: 71.7,
-      operatingHours: 24,
-      operatingDays: 365
-    });
-  };
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setInputs(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handleUserDataChange = (newUserData) => {
-    setUserData(newUserData);
-  };
-
-  const handleParametersChange = (newParams) => {
-    setInputs(prev => ({
-      ...prev,
-      ...newParams
-    }));
-    // Auto-avanço após configurar parâmetros
-    setTimeout(() => handleNext(), 500);
-  };
-
-  const handleCityChange = (cityData) => {
-    setSelectedCity(cityData);
-    setInputs(prev => ({
-      ...prev,
-      location: cityData.name
-    }));
-    // Auto-avanço após selecionar cidade
-    setTimeout(() => handleNext(), 500);
-  };
-
-  const handleFinishSimulation = async () => {
-    // Abrir modal de orçamento em vez de salvar diretamente
-    setBudgetModalOpen(true);
-  };
-
-  const handleBudgetRequest = async (budgetData) => {
-    try {
-      setIsLoading(true);
-      
-      const simulationData = {
-        userData,
-        inputs,
-        results: {
-          drycooler: {
-            consumption: results.drycooler.consumption,
-            modules: results.drycooler.modules,
-            totalCapacity: results.drycooler.totalCapacity
-          },
-          tower: { consumption: results.tower.consumption },
-          comparison: {
-            yearlyDifference: results.comparison.yearlyDifference,
-            yearlyDifferencePercentage: results.comparison.yearlyDifferencePercentage
-          }
-        },
-        budgetRequest: {
-          wantsBudget: budgetData.wantsBudget,
-          additionalInfo: budgetData.additionalInfo
-        },
-        timestamp: new Date().toISOString(),
-        location: inputs.location,
-        capacity: inputs.capacity
-      };
-
-      await saveSimulation(simulationData);
-      
-      // Marcar última etapa como completa e ir para página de obrigado
-      setCompletedSteps(prev => [...prev, activeStep]);
-      setBudgetRequestData(budgetData);
-      setSimulationCompleted(true);
-      setActiveStep(5); // Ir para a página de obrigado
-      
-    } catch (error) {
-      console.error('Erro ao finalizar simulação:', error);
-      setNotification({
-        open: true,
-        message: 'Erro ao salvar a simulação. Tente novamente mais tarde.',
-        severity: 'error'
-      });
-    } finally {
-      setIsLoading(false);
-      setBudgetModalOpen(false);
-    }
-  };
 
   const renderStepContent = (step) => {
     switch (step) {
@@ -553,7 +241,7 @@ const App = () => {
         return <SimulationParametersForm inputs={inputs} onChange={handleParametersChange} darkMode={darkMode} />;
       case 3:
         return <CitySelectionForm 
-          cities={citiesData} 
+          cities={cities} 
           selectedCity={selectedCity} 
           onChange={handleCityChange} 
           darkMode={darkMode} 
@@ -582,20 +270,6 @@ const App = () => {
     }
   };
 
-  // Verificar se pode prosseguir
-  const canProceed = () => {
-    switch (activeStep) {
-      case 1:
-        return userData.name && userData.email;
-      case 2:
-        return inputs.capacity > 0;
-      case 3:
-        return selectedCity !== null;
-      default:
-        return true;
-    }
-  };
-
   return (
     <ErrorBoundary>
       <ThemeProvider theme={theme}>
@@ -615,7 +289,6 @@ const App = () => {
             pb: { xs: 10, sm: 4 }
           }}
         >
-          {/* Loading overlay apenas quando necessário */}
           {isLoading && (
             <LoadingSpinner 
               fullScreen 
@@ -637,7 +310,6 @@ const App = () => {
                 : 'linear-gradient(145deg, #ffffff 0%, #fafafa 100%)',
             }}
           >
-            {/* Cabeçalho melhorado */}
             <Box
               sx={{
                 display: 'flex',
@@ -701,7 +373,6 @@ const App = () => {
               </Box>
             </Box>
 
-            {/* Conteúdo Principal */}
             <Box 
               id="main-content"
               tabIndex={-1}
@@ -714,7 +385,6 @@ const App = () => {
                 <WelcomePage onStartSimulation={handleStartSimulation} darkMode={darkMode} />
               ) : (
                 <>
-                  {/* Progress Indicator - não mostrar na página de obrigado */}
                   {activeStep < 5 && (
                     <ProgressIndicator
                       currentStep={activeStep}
@@ -723,7 +393,6 @@ const App = () => {
                     />
                   )}
 
-                  {/* Stepper melhorado - não mostrar na página de obrigado */}
                   {activeStep < 5 && (
                     <ImprovedStepper
                       activeStep={activeStep}
@@ -733,17 +402,15 @@ const App = () => {
                     />
                   )}
 
-                  {/* Conteúdo do Passo Atual */}
                   <Box sx={{ minHeight: '50vh', py: 4 }}>
                     {renderStepContent(activeStep)}
                   </Box>
 
-                  {/* Navegação Responsiva - não mostrar na página de obrigado */}
                   {activeStep < 5 && (
                     <ResponsiveNavigation
                       activeStep={activeStep}
                       totalSteps={steps.length - 1}
-                      onBack={handleBack}
+                      onBack={() => activeStep === 0 ? navigate('/') : handleBack()}
                       onNext={handleNext}
                       onFinish={handleFinishSimulation}
                       onHome={handleRestart}
@@ -758,7 +425,6 @@ const App = () => {
 
           <PrivacyBanner />
 
-          {/* Modal de Orçamento */}
           <BudgetRequestModal
             open={budgetModalOpen}
             onClose={() => setBudgetModalOpen(false)}

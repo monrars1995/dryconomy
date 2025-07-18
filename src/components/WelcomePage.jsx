@@ -19,8 +19,8 @@ import {
   ArrowForward as ArrowForwardIcon
 } from '@mui/icons-material';
 
-// Importar o componente WaterDropSVG do arquivo WaterSavingsResults
-import { WaterDropSVG } from './WaterSavingsResults';
+// Importar o componente WaterDropSVG do arquivo dedicado
+import WaterDropSVG from './WaterDropSVG';
 
 const FeatureCard = ({ icon: Icon, title, description, darkMode }) => (
   <Card 

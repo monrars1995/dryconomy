@@ -1,6 +1,6 @@
 import { getSystemConfig } from './supabaseClient';
 import { supabase } from './authService';
-import { cityParameters } from '../config/cityParameters';
+import { cityParameters, commonParameters } from '../config/cityParameters';
 
 /**
  * Salva os dados da simulação no Supabase e envia para o webhook existente (se habilitado)
@@ -12,14 +12,13 @@ export const saveSimulation = async (simulationData) => {
   let leadId = null;
   let webhookSuccess = false;
   
-  console.log('Iniciando salvamento da simulação:', simulationData);
+  
   
   // Verificar configuração do sistema
   let systemConfig;
   try {
     systemConfig = await getSystemConfig();
   } catch (error) {
-    console.warn('Erro ao buscar configuração do sistema:', error);
     systemConfig = { webhook_enabled: true }; // Fallback para webhook habilitado
   }
   const webhookEnabled = systemConfig?.webhook_enabled ?? true;
@@ -27,7 +26,7 @@ export const saveSimulation = async (simulationData) => {
   // Tentativa 1: Salvar no Supabase
   try {
     // 1. Primeiro, salvamos o lead na tabela 'leads'
-    const { userData } = simulationData;
+    const { userData, inputs, results } = simulationData;
     
     if (!userData || !userData.name || !userData.email) {
       throw new Error('Dados do usuário incompletos para salvamento');
@@ -43,7 +42,7 @@ export const saveSimulation = async (simulationData) => {
       created_at: new Date().toISOString()
     };
     
-    console.log('Tentando salvar lead no Supabase:', leadData);
+    
     
     // Inserir o lead no Supabase
     const { data: leadResult, error: leadError } = await supabase
@@ -52,44 +51,96 @@ export const saveSimulation = async (simulationData) => {
       .select();
     
     if (leadError) {
-      console.error('Erro ao salvar lead no Supabase:', leadError);
       throw leadError;
     } else if (leadResult && leadResult.length > 0) {
-      // Se conseguimos salvar o lead, tentamos salvar o resultado da simulação
       leadId = leadResult[0].id;
-      console.log('Lead salvo com sucesso, ID:', leadId);
       
-      const simulationResult = {
+
+      // Obter water_flow da cidade selecionada
+      const selectedCity = cityParameters[inputs.location];
+      const waterFlow = selectedCity ? selectedCity.waterFlow : 0; // Default to 0 if not found
+
+      // Obter delta_t dos parâmetros comuns
+      const deltaT = commonParameters.deltaT;
+      
+      // Salvar os dados principais da simulação na tabela 'simulations'
+      const simulationMainData = {
         lead_id: leadId,
-        input_data: {
-          location: simulationData.location,
-          capacity: simulationData.capacity,
-          operatingHours: simulationData.operatingHours,
-          operatingDays: simulationData.operatingDays
-        },
-        results: simulationData.results,
+        capacity: inputs.capacity,
+        location: inputs.location,
+        delta_t: deltaT,
+        water_flow: waterFlow,
+        operating_hours: inputs.operatingHours,
+        operating_days: inputs.operatingDays,
         created_at: new Date().toISOString()
       };
       
-      console.log('Tentando salvar resultado da simulação:', simulationResult);
+      
       
       const { data: simulationSaveResult, error: simulationError } = await supabase
-        .from('simulation_results')
-        .insert(simulationResult)
+        .from('simulations')
+        .insert(simulationMainData)
         .select();
       
       if (simulationError) {
-        console.error('Erro ao salvar resultado no Supabase:', simulationError);
         throw simulationError;
-      } else {
+      } else if (simulationSaveResult && simulationSaveResult.length > 0) {
+        const simulationId = simulationSaveResult[0].id;
+        
+
+        // Salvar resultados do Drycooler
+        const drycoolerResultsData = {
+          simulation_id: simulationId,
+          module_capacity: results.drycooler.moduleCapacity,
+          modules: results.drycooler.modules,
+          total_capacity: results.drycooler.totalCapacity,
+          nominal_water_flow: results.drycooler.nominalWaterFlow,
+          evaporation_percentage: results.drycooler.evaporationPercentage,
+          evaporation_flow: results.drycooler.evaporationFlow,
+          hourly_consumption: results.drycooler.consumption.hourly,
+          daily_consumption: results.drycooler.consumption.daily,
+          monthly_consumption: results.drycooler.consumption.monthly,
+          yearly_consumption: results.drycooler.consumption.yearly,
+          created_at: new Date().toISOString()
+        };
+        const { error: drycoolerError } = await supabase.from('drycooler_results').insert(drycoolerResultsData);
+        if (drycoolerError) ;
+
+        // Salvar resultados da Torre
+        const towerResultsData = {
+          simulation_id: simulationId,
+          capacity: results.tower.capacity,
+          nominal_water_flow: results.tower.nominalWaterFlow, // Assuming this exists or needs to be added to results.tower
+          evaporation_percentage: results.tower.evaporationPercentage, // Assuming this exists or needs to be added to results.tower
+          evaporation_flow: results.tower.evaporationFlow, // Assuming this exists or needs to be added to results.tower
+          hourly_consumption: results.tower.consumption.hourly,
+          daily_consumption: results.tower.consumption.daily,
+          monthly_consumption: results.tower.consumption.monthly,
+          yearly_consumption: results.tower.consumption.yearly,
+          created_at: new Date().toISOString()
+        };
+        const { error: towerError } = await supabase.from('tower_results').insert(towerResultsData);
+        if (towerError) ;
+
+        // Salvar resultados da Comparação
+        const comparisonResultsData = {
+          simulation_id: simulationId,
+          yearly_difference: results.comparison.yearlyDifference,
+          yearly_difference_percentage: results.comparison.yearlyDifferencePercentage,
+          sustainability_score: results.comparison.sustainabilityScore || 0, // Assuming sustainabilityScore exists or default to 0
+          created_at: new Date().toISOString()
+        };
+        const { error: comparisonError } = await supabase.from('comparison_results').insert(comparisonResultsData);
+        if (comparisonError) ;
+
         supabaseSuccess = true;
-        console.log('Simulação salva com sucesso no Supabase:', simulationSaveResult);
+      } else {
+        throw new Error('Falha ao obter ID da simulação após inserção');
       }
     } else {
       throw new Error('Falha ao obter ID do lead após inserção');
     }
   } catch (supabaseError) {
-    console.error('Erro completo ao salvar no Supabase:', supabaseError);
     supabaseSuccess = false;
   }
   
@@ -103,14 +154,12 @@ export const saveSimulation = async (simulationData) => {
       savedToWebhook: webhookSuccess
     });
     localStorage.setItem('savedSimulations', JSON.stringify(savedSimulations));
-    console.log('Cópia local salva com sucesso');
+    
   } catch (localStorageError) {
-    console.warn('Não foi possível salvar cópia local', localStorageError);
   }
   
   // Consideramos a operação um sucesso se conseguimos salvar em pelo menos um dos lugares
   if (supabaseSuccess || webhookSuccess) {
-    console.log('Simulação salva com sucesso:', { supabaseSuccess, webhookSuccess, leadId });
     return {
       success: true,
       leadId,
@@ -118,7 +167,6 @@ export const saveSimulation = async (simulationData) => {
       savedToWebhook: webhookSuccess
     };
   } else {
-    console.error('Falha completa no salvamento da simulação');
     // Retornamos sucesso mesmo com falha para não bloquear o usuário
     // Os dados estão salvos no localStorage como backup
     return {
@@ -141,19 +189,16 @@ export const getCities = async () => {
       .order('name', { ascending: true });
       
     if (error) {
-      console.warn('Erro ao buscar cidades do Supabase, usando dados locais:', error);
       throw error;
     }
     
     if (data && data.length > 0) {
-      console.log('Cidades carregadas do Supabase:', data.length);
       return data;
     } else {
       throw new Error('Nenhuma cidade encontrada no Supabase');
     }
   } catch (error) {
     // Se falhar, usamos os dados locais
-    console.log('Usando dados de cidades locais');
     
     // Converter o objeto cityParameters em um array de objetos de cidade
     const cities = Object.keys(cityParameters).map(name => {
@@ -176,5 +221,79 @@ export const getCities = async () => {
     });
     
     return cities;
+  }
+};
+
+/**
+ * Busca simulações com suporte a paginação, busca e filtros avançados
+ * @param {Object} options - Opções de busca
+ * @param {number} options.page - Página atual (padrão: 1)
+ * @param {number} options.perPage - Itens por página (padrão: 10)
+ * @param {string} options.search - Termo de busca opcional
+ * @param {string} options.orderBy - Campo para ordenação
+ * @param {'asc'|'desc'} options.order - Direção da ordenação
+ * @returns {Promise<Object>} Dados paginados das simulações
+ */
+export const getSimulations = async ({
+  page = 1,
+  perPage = 10,
+  search = '',
+  orderBy = 'created_at',
+  order = 'desc',
+} = {}) => {
+  try {
+    const from = (page - 1) * perPage;
+    const to = from + perPage - 1;
+
+    let query = supabase
+      .from('simulations')
+      .select(
+        `
+        *,
+        drycooler_results(yearly_consumption),
+        tower_results(yearly_consumption),
+        comparison_results(yearly_difference, yearly_difference_percentage)
+      `,
+        { count: 'exact' }
+      );
+
+    // Aplicar filtro de busca
+    if (search) {
+      query = query.or(`capacity.ilike.%${search}%,location.ilike.%${search}%`);
+    }
+
+    // Ordenação
+    if (orderBy) {
+      query = query.order(orderBy, { ascending: order === 'asc' });
+    } else {
+      // Ordenação padrão
+      query = query.order('created_at', { ascending: false });
+    }
+
+    // Paginação
+    query = query.range(from, to);
+
+    const { data, count, error } = await query;
+
+    if (error) throw error;
+
+    // Mapear os resultados para um formato mais plano
+    const formattedData = (data || []).map((sim) => ({
+      ...sim,
+      drycooler_yearly_consumption: sim.drycooler_results?.yearly_consumption,
+      tower_yearly_consumption: sim.tower_results?.yearly_consumption,
+      comparison_yearly_difference: sim.comparison_results?.yearly_difference,
+      comparison_yearly_difference_percentage: sim.comparison_results?.yearly_difference_percentage,
+    }));
+
+    return {
+      data: formattedData,
+      total: count || 0,
+      page,
+      perPage,
+      totalPages: Math.ceil((count || 0) / perPage),
+    };
+  } catch (error) {
+    throw error;
   }
 };
