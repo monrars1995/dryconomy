@@ -122,7 +122,7 @@ const ThankYouPage = ({ userData, simulationResults, budgetRequested, onRestart,
                     fontWeight: 800,
                     fontSize: { xs: '1.8rem', sm: '2.2rem' }
                   }}>
-                    {simulationResults?.comparison?.yearlyDifference?.toLocaleString('pt-BR')} L
+                    {simulationResults?.comparison?.yearly_difference?.toLocaleString('pt-BR') || '0'} L
                   </Typography>
                   <Typography variant="body1" color="text.secondary">
                     Economia anual de água
@@ -142,7 +142,7 @@ const ThankYouPage = ({ userData, simulationResults, budgetRequested, onRestart,
                     fontWeight: 800,
                     fontSize: { xs: '1.8rem', sm: '2.2rem' }
                   }}>
-                    {simulationResults?.comparison?.yearlyDifferencePercentage?.toFixed(1)}%
+                    {simulationResults?.comparison?.yearly_difference_percentage?.toFixed(1) || '0'}%
                   </Typography>
                   <Typography variant="body1" color="text.secondary">
                     Redução no consumo
@@ -189,7 +189,7 @@ const ThankYouPage = ({ userData, simulationResults, budgetRequested, onRestart,
                     <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                       <EmailIcon sx={{ mr: 1, color: 'primary.main' }} />
                       <Typography variant="body2">
-                        contato@dryconomy.com
+                        vendas@mecalor.com
                       </Typography>
                     </Box>
                   </Grid>
@@ -197,7 +197,7 @@ const ThankYouPage = ({ userData, simulationResults, budgetRequested, onRestart,
                     <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                       <PhoneIcon sx={{ mr: 1, color: 'primary.main' }} />
                       <Typography variant="body2">
-                        (11) 99999-9999
+                        (11) 2188-1700
                       </Typography>
                     </Box>
                   </Grid>
@@ -205,96 +205,32 @@ const ThankYouPage = ({ userData, simulationResults, budgetRequested, onRestart,
                     <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                       <BusinessIcon sx={{ mr: 1, color: 'primary.main' }} />
                       <Typography variant="body2">
-                        www.dryconomy.com
+                        www.mecalor.com
                       </Typography>
                     </Box>
                   </Grid>
                 </Grid>
               )}
             </Box>
-
-            {/* Botões de ação */}
-            <Grid container spacing={2} justifyContent="center">
-              <Grid item xs={12} sm={6} md={3}>
-                <Button
-                  fullWidth
-                  variant="contained"
-                  color="primary"
-                  startIcon={<DownloadIcon />}
-                  onClick={handleDownloadReport}
-                  sx={{
-                    borderRadius: 2,
-                    py: 1.5,
-                    background: 'linear-gradient(45deg, #00337A 30%, #1976d2 90%)',
-                    '&:hover': {
-                      transform: 'translateY(-2px)',
-                      boxShadow: '0 6px 20px rgba(0, 51, 122, 0.3)'
-                    },
-                    transition: 'all 0.3s ease'
-                  }}
-                >
-                  Baixar Relatório
-                </Button>
-              </Grid>
-              
-              <Grid item xs={12} sm={6} md={3}>
-                <Button
-                  fullWidth
-                  variant="outlined"
-                  color="success"
-                  startIcon={<WhatsAppIcon />}
-                  onClick={handleShareWhatsApp}
-                  sx={{
-                    borderRadius: 2,
-                    py: 1.5,
-                    borderWidth: 2,
-                    '&:hover': {
-                      borderWidth: 2,
-                      transform: 'translateY(-2px)',
-                      boxShadow: '0 6px 20px rgba(46, 125, 50, 0.2)'
-                    },
-                    transition: 'all 0.3s ease'
-                  }}
-                >
-                  Compartilhar
-                </Button>
-              </Grid>
-              
-              <Grid item xs={12} sm={6} md={3}>
+        
+            {/* Botão de nova simulação */}
+              <Grid item xs={12} sm={6} md={4}>
                 <Button
                   fullWidth
                   variant="outlined"
                   color="primary"
-                  startIcon={<EmailIcon />}
-                  onClick={handleShareEmail}
-                  sx={{
-                    borderRadius: 2,
-                    py: 1.5,
-                    borderWidth: 2,
-                    '&:hover': {
-                      borderWidth: 2,
-                      transform: 'translateY(-2px)',
-                      boxShadow: '0 6px 20px rgba(25, 118, 210, 0.2)'
-                    },
-                    transition: 'all 0.3s ease'
-                  }}
-                >
-                  Enviar por E-mail
-                </Button>
-              </Grid>
-              
-              <Grid item xs={12} sm={6} md={3}>
-                <Button
-                  fullWidth
-                  variant="text"
-                  color="inherit"
                   startIcon={<HomeIcon />}
                   onClick={onRestart}
                   sx={{
                     borderRadius: 2,
                     py: 1.5,
+                    height: 56,
+                    fontWeight: 600,
+                    borderColor: '#00337A',
+                    color: darkMode ? '#fff' : '#00337A',
                     '&:hover': {
-                      backgroundColor: darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
+                      borderColor: darkMode ? '#fff' : '#002759',
+                      backgroundColor: darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,51,122,0.05)',
                       transform: 'translateY(-2px)'
                     },
                     transition: 'all 0.3s ease'
@@ -302,7 +238,6 @@ const ThankYouPage = ({ userData, simulationResults, budgetRequested, onRestart,
                 >
                   Nova Simulação
                 </Button>
-              </Grid>
             </Grid>
           </CardContent>
         </Card>
@@ -333,8 +268,8 @@ const ThankYouPage = ({ userData, simulationResults, budgetRequested, onRestart,
           </Typography>
         </Box>
 
-        {/* Animação CSS */}
-        <style jsx>{`
+        {/* Animação CSS - Adicionada no estilo global ou via className */}
+        <style dangerouslySetInnerHTML={{__html: `
           @keyframes pulse {
             0% {
               transform: scale(1);
@@ -349,7 +284,7 @@ const ThankYouPage = ({ userData, simulationResults, budgetRequested, onRestart,
               box-shadow: 0 8px 32px rgba(46, 125, 50, 0.3);
             }
           }
-        `}</style>
+        `}} />
       </Box>
     </Fade>
   );

@@ -298,34 +298,44 @@ const App = () => {
     const loadInitialData = async () => {
       try {
         setIsLoading(true);
-        
-        // Carregar cidades usando o serviço de API
         const response = await getCities();
-        if (response && response.data) {
-          // Garantir que cada cidade tenha um ID único
-          const citiesWithIds = response.data.map((city, index) => ({
-            ...city,
-            id: city.id || `city-${index}` // Usar ID existente ou gerar um
-          }));
-          setCities(citiesWithIds);
-        } else {
-          throw new Error('Dados de cidades não encontrados');
-        }
+        const citiesData = response.data;
         
-        setInitialDataLoaded(true);
+        if (Array.isArray(citiesData) && citiesData.length > 0) {
+          setCities(citiesData);
+          setCitiesData(citiesData);
+          console.log(`${citiesData.length} cidades carregadas do banco Supabase`);
+        } else {
+          throw new Error('Erro ao carregar cidades: dados inválidos');
+        }
       } catch (error) {
         console.error('Erro ao carregar dados iniciais:', error);
         setSnackbar({
           open: true,
-          message: 'Erro ao carregar cidades. Verifique sua conexão e tente novamente.',
+          message: 'Erro ao carregar dados. Por favor, tente novamente mais tarde.',
           severity: 'error'
         });
       } finally {
         setIsLoading(false);
+        setInitialDataLoaded(true);
       }
     };
-    
+
     loadInitialData();
+
+    // Event listener para solicitação de orçamento da página de agradecimento
+    const handleRequestBudget = () => {
+      console.log('Solicitação de orçamento recebida da página de agradecimento');
+      setBudgetModalOpen(true);
+    };
+
+    // Adiciona o event listener
+    window.addEventListener('request-budget', handleRequestBudget);
+
+    // Limpa o event listener quando o componente for desmontado
+    return () => {
+      window.removeEventListener('request-budget', handleRequestBudget);
+    };
   }, []);
 
   // Carregar dados da cidade selecionada
@@ -621,23 +631,42 @@ const App = () => {
     try {
       setIsLoading(true);
       
-      // Enviar dados para a API
-      const response = await fetch('/api/budget-requests', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...budgetData,
-          simulationData: {
-            inputs,
-            results,
-            userData
-          }
-        }),
-      });
+      // Importar supabase da authService
+      const { supabase } = await import('./services/authService');
       
-      if (!response.ok) throw new Error('Falha ao enviar solicitação');
+      // Extrair dados do usuário do formulário
+      const { name, email, phone, company } = userData;
+      
+      // Preparar os dados do orçamento de acordo com a estrutura da tabela
+      const budgetRequestData = {
+        name,
+        email,
+        phone,
+        company,
+        additional_info: budgetData.additionalInfo || '',
+        simulation_data: {
+          inputs,
+          results,
+          location: inputs.location?.name || inputs.location,
+          capacity: inputs.capacity,
+          parameters: {
+            hours: inputs.hours,
+            days: inputs.days
+          }
+        },
+        status: 'pending'
+      };
+      
+      console.log('Enviando dados para budget_requests:', budgetRequestData);
+      
+      // Inserir na tabela budget_requests do Supabase
+      const { data, error } = await supabase
+        .from('budget_requests')
+        .insert([budgetRequestData]);
+        
+      if (error) throw new Error(`Falha ao enviar solicitação: ${error.message}`);
+      
+      console.log('Orçamento enviado com sucesso:', data);
       
       setSnackbar({
         open: true,
@@ -649,6 +678,7 @@ const App = () => {
       handleNext();
     } catch (error) {
       console.error('Erro ao enviar solicitação de orçamento:', error);
+      
       setSnackbar({
         open: true,
         message: 'Erro ao enviar solicitação. Tente novamente mais tarde.',
@@ -710,7 +740,9 @@ const App = () => {
         return (
           <ThankYouPage 
             onRestart={handleRestart} 
-            userData={userData} 
+            userData={userData}
+            simulationResults={results}
+            darkMode={darkMode} 
           />
         );
       default:

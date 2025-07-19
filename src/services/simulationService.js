@@ -362,6 +362,124 @@ export const getCalculationVariables = async () => {
  * @param {'asc'|'desc'} options.order - Direção da ordenação
  * @returns {Promise<Object>} Dados paginados das simulações
  */
+// Função específica para área administrativa
+export const getAdminSimulations = async ({
+  page = 1,
+  perPage = 10,
+  search = '',
+  orderBy = 'created_at',
+  order = 'desc',
+} = {}) => {
+  try {
+    // Verificar se o usuário está autenticado
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session) {
+      console.error('Erro de autenticação: Nenhuma sessão ativa encontrada');
+      return { data: [], total: 0, page, perPage, totalPages: 0, error: 'Não autenticado' };
+    }
+    
+    const from = (page - 1) * perPage;
+    const to = from + perPage - 1;
+
+    console.log('Buscando simulações admin com os parâmetros:', {
+      page,
+      perPage,
+      search,
+      orderBy,
+      order,
+      from,
+      to
+    });
+
+    // Consulta sem filtro por usuário (para administradores)
+    let query = supabase
+      .from('simulations')
+      .select(
+        `
+        *,
+        drycooler_results(yearly_consumption),
+        tower_results(yearly_consumption),
+        comparison_results(yearly_difference, yearly_difference_percentage)
+      `,
+        { count: 'exact' }
+      );
+
+    // Aplicar filtro de busca
+    if (search) {
+      query = query.or(`capacity.ilike.%${search}%,location.ilike.%${search}%`);
+    }
+
+    // Ordenação
+    if (orderBy) {
+      query = query.order(orderBy, { ascending: order === 'asc' });
+    }
+
+    // Paginação
+    query = query.range(from, to);
+
+    const { data, count, error, status, statusText } = await query;
+
+    console.log('Resposta da API (admin):', { status, statusText, error, count: count || 0 });
+
+    if (error) {
+      console.error('Erro ao buscar simulações (admin):', error);
+      // Mensagem de erro mais descritiva para ajudar na depuração
+      const errorMessage = error.message || 'Erro desconhecido';
+      const errorCode = error.code || 'sem código';
+      console.error(`Falha na consulta da tabela simulations: ${errorMessage} (código: ${errorCode})`);
+      
+      // Em vez de lançar erro, retornar objeto com informações de erro
+      return { 
+        data: [], 
+        total: 0, 
+        page, 
+        perPage, 
+        totalPages: 0, 
+        error: error,
+        errorDetails: {
+          message: errorMessage,
+          code: errorCode,
+          suggestion: errorMessage.includes('does not exist') ? 
+            'Verifique se a coluna especificada existe na tabela' : 
+            'Verifique a sintaxe e parâmetros da consulta'
+        }
+      };
+    }
+
+    // Mapear os resultados para um formato mais plano
+    const formattedData = (data || []).map((sim) => ({
+      ...sim,
+      drycooler_yearly_consumption: sim.drycooler_results?.[0]?.yearly_consumption,
+      tower_yearly_consumption: sim.tower_results?.[0]?.yearly_consumption,
+      comparison_yearly_difference: sim.comparison_results?.[0]?.yearly_difference,
+      comparison_yearly_difference_percentage: sim.comparison_results?.[0]?.yearly_difference_percentage,
+    }));
+
+    const totalPages = Math.ceil((count || 0) / perPage);
+
+    return {
+      data: formattedData,
+      total: count || 0,
+      page,
+      perPage,
+      totalPages,
+    };
+  } catch (error) {
+    console.error('Erro em getAdminSimulations:', error);
+    return {
+      data: [],
+      total: 0,
+      page,
+      perPage,
+      totalPages: 0,
+      error,
+    };
+  }
+};
+
+// Função regular para usuários (manter para compatibilidade)
+// Importante: Não usar na área admin!
 export const getSimulations = async ({
   page = 1,
   perPage = 10,
@@ -403,7 +521,7 @@ export const getSimulations = async ({
       `,
         { count: 'exact' }
       )
-      .eq('user_id', session.user.id); // Filtra apenas as simulações do usuário atual
+      // Removido filtro por user_id que não existe na tabela simulations
 
     // Aplicar filtro de busca
     if (search) {
@@ -427,7 +545,27 @@ export const getSimulations = async ({
 
     if (error) {
       console.error('Erro ao buscar simulações:', error);
-      throw error;
+      // Mensagem de erro mais descritiva para ajudar na depuração
+      const errorMessage = error.message || 'Erro desconhecido';
+      const errorCode = error.code || 'sem código';
+      console.error(`Falha na consulta da tabela simulations: ${errorMessage} (código: ${errorCode})`);
+      
+      // Em vez de lançar erro, retornar objeto com informações de erro
+      return { 
+        data: [], 
+        total: 0, 
+        page, 
+        perPage, 
+        totalPages: 0, 
+        error: error,
+        errorDetails: {
+          message: errorMessage,
+          code: errorCode,
+          suggestion: errorMessage.includes('does not exist') ? 
+            'Verifique se a coluna especificada existe na tabela' : 
+            'Verifique a sintaxe e parâmetros da consulta'
+        }
+      };
     }
 
     // Mapear os resultados para um formato mais plano

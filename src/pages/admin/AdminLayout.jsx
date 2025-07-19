@@ -39,7 +39,8 @@ import {
   ExpandMore as ExpandMoreIcon,
   ChevronLeft as ChevronLeftIcon,
   ChevronRight as ChevronRightIcon,
-  Home as HomeIcon
+  Home as HomeIcon,
+  RequestQuote as RequestQuoteIcon
 } from '@mui/icons-material';
 import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
 import { supabase } from '../../services/authService';
@@ -79,6 +80,12 @@ const AdminLayout = () => {
       icon: <AssessmentIcon />, 
       path: '/admin/simulacoes',
       active: location.pathname === '/admin/simulacoes'
+    },
+    { 
+      text: 'Orçamentos', 
+      icon: <RequestQuoteIcon />, 
+      path: '/admin/orcamentos',
+      active: location.pathname === '/admin/orcamentos'
     },
     { 
       text: 'Cidades', 

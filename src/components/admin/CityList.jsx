@@ -30,6 +30,8 @@ const CityList = ({
   const [cityToDelete, setCityToDelete] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
+  // Estado para armazenar o termo de busca (se existir)
+  const [searchTerm, setSearchTerm] = useState('');
 
   // Abrir diálogo de confirmação de exclusão
   const handleOpenDeleteDialog = (city) => {
@@ -208,7 +210,7 @@ const CityList = ({
       {/* Diálogo de confirmação de exclusão */}
       <Dialog
         open={deleteDialogOpen}
-        onClose={handleCloseDialog}
+        onClose={handleCloseDeleteDialog}
         maxWidth="sm"
         fullWidth
         PaperProps={{

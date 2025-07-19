@@ -28,7 +28,7 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from '../../hooks/useAuth';
 import { getLeads } from '../../services/leadService';
-import { getSimulations } from '../../services/simulationService';
+import { getAdminSimulations } from '../../services/simulationService';
 
 // Componente de cartão de métrica melhorado
 const MetricCard = ({ title, value, icon, color, loading = false, subtitle }) => {
@@ -200,9 +200,13 @@ const DashboardPage = () => {
       const { data: leads, error: leadsError } = await getLeads({ perPage: 9999 }); // Buscar todos os leads
       if (leadsError) throw leadsError;
       
-      // Buscar simulações
-      const { data: simulations, error: simulationsError } = await getSimulations({ perPage: 9999 }); // Buscar todas as simulações
-      if (simulationsError) throw simulationsError;
+      // Buscar simulações usando a função específica para admin
+      const { data: simulations, error: simulationsError } = await getAdminSimulations({ perPage: 9999 }); // Buscar todas as simulações
+      if (simulationsError) {
+        console.warn('Erro ao buscar simulações:', simulationsError);
+        // Continuar com array vazio em vez de lançar erro
+        // para permitir que o dashboard ainda carregue
+      }
       
       // Calcular métricas
       const totalLeads = leads?.length || 0;

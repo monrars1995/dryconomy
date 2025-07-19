@@ -18,6 +18,7 @@ import Cities from './pages/admin/Cities';
 import Leads from './pages/admin/Leads';
 import Webhooks from './pages/admin/Webhooks';
 import SimulationsPanel from './pages/admin/SimulationsPanel';
+import BudgetRequests from './pages/admin/BudgetRequests';
 import NotFound from './pages/NotFound';
 
 // Components
@@ -112,6 +113,7 @@ const AppRoutes = () => {
               <Route path="cidades" element={<Cities />} />
               <Route path="leads" element={<Leads />} />
               <Route path="simulacoes" element={<SimulationsPanel />} />
+              <Route path="orcamentos" element={<BudgetRequests />} />
               <Route path="webhooks" element={<Webhooks />} />
             </Route>
             

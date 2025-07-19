@@ -164,7 +164,7 @@ const SimulationsPanel = () => {
                     <TableRow key={simulation.id} hover>
                       <TableCell>
                         <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                          {simulation.id.substring(0, 8)}...
+                          {String(simulation.id).substring(0, 8)}...
                         </Typography>
                       </TableCell>
                       <TableCell>
@@ -288,25 +288,37 @@ const SimulationsPanel = () => {
                     <Box sx={{ mb: 1 }}>
                       <Typography variant="body2" color="text.secondary">Economia Anual de Água:</Typography>
                       <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                        {selectedSimulation.comparison_yearly_difference?.toLocaleString('pt-BR')} L
+                        {selectedSimulation.comparison_yearly_difference 
+                          ? selectedSimulation.comparison_yearly_difference.toLocaleString('pt-BR')
+                          : 'N/A'} L
                       </Typography>
                     </Box>
                     <Box sx={{ mb: 1 }}>
                       <Typography variant="body2" color="text.secondary">Redução Percentual:</Typography>
                       <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                        {selectedSimulation.comparison_yearly_difference_percentage?.toFixed(2)}%
+                        {selectedSimulation.comparison_yearly_difference_percentage !== null && 
+                         selectedSimulation.comparison_yearly_difference_percentage !== undefined
+                          ? selectedSimulation.comparison_yearly_difference_percentage.toFixed(2)
+                          : 'N/A'}%
                       </Typography>
                     </Box>
                     <Box sx={{ mb: 1 }}>
                       <Typography variant="body2" color="text.secondary">CO2 Evitado (ton):</Typography>
                       <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                        {(selectedSimulation.comparison_yearly_difference * 0.00058 / 1000)?.toFixed(2)}
+                        {selectedSimulation.comparison_yearly_difference 
+                          ? (selectedSimulation.comparison_yearly_difference * 0.00058 / 1000).toFixed(2)
+                          : 'N/A'}
                       </Typography>
                     </Box>
                     <Box>
                       <Typography variant="body2" color="text.secondary">Economia Financeira (R$):</Typography>
                       <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                        R$ {(selectedSimulation.comparison_yearly_difference * 0.0105)?.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        R$ {selectedSimulation.comparison_yearly_difference 
+                          ? (selectedSimulation.comparison_yearly_difference * 0.0105).toLocaleString('pt-BR', {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2
+                            })
+                          : 'N/A'}
                       </Typography>
                     </Box>
                   </Card>

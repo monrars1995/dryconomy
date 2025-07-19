@@ -58,16 +58,22 @@ const Leads = () => {
         .from('leads')
         .select('*', { count: 'exact' });
 
-      // Aplicar filtro de busca
+      // Aplicar filtro de busca com tratamento de erro
       if (searchTerm) {
-        query = query.or(`name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%,company.ilike.%${searchTerm}%`);
+        try {
+          query = query.or(`name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%,company.ilike.%${searchTerm}%`);
+        } catch (searchError) {
+          console.error('Erro ao aplicar filtro de busca:', searchError);
+          // Fallback para filtro mais simples
+          query = query.ilike('name', `%${searchTerm}%`);
+        }
       }
 
       // Aplicar filtro de status
       if (statusFilter) {
         query = query.eq('status', statusFilter);
       }
-
+      
       // Aplicar filtro de data
       if (dateFilter) {
         const now = new Date();
